@@ -97,6 +97,9 @@ export default function Home() {
           Go to nextjs.org →
         </a>
       </footer>
+      <div className="flex ">
+        <div className=""></div>
+      </div>
     </div>
   );
 }
