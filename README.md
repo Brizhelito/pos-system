@@ -1,24 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sistema POS
 
-## Getting Started
+Este es un Sistema de Punto de Venta (POS) desarrollado con [Next.js](https://nextjs.org) utilizando TypeScript y Prisma para la gestión de base de datos.
 
-First, run the development server:
+## Estructura del Proyecto
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+El proyecto ha sido organizado siguiendo buenas prácticas de desarrollo para facilitar su mantenimiento y escalabilidad:
+
+```
+pos-system/
+├── prisma/                 # Configuración de base de datos y migraciones
+├── public/                 # Archivos estáticos
+├── src/
+│   ├── app/                # Rutas y páginas de Next.js (App Router)
+│   ├── lib/                # Utilidades y lógica compartida
+│   │   ├── api/            # Funciones auxiliares para APIs
+│   │   ├── auth/           # Lógica de autenticación
+│   │   ├── db/             # Configuración y utilidades de base de datos
+│   │   └── utils/          # Funciones de utilidad generales
+│   ├── components/
+│   │   ├── ui/             # Componentes de UI reutilizables
+│   │   ├── forms/          # Componentes de formulario
+│   │   ├── layout/         # Componentes de diseño (header, footer, etc.)
+│   │   └── features/       # Componentes específicos de características
+│   ├── types/              # Definiciones de tipos TypeScript
+│   └── middleware.ts       # Middleware de Next.js
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Cómo Empezar
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Primero, instala las dependencias y ejecuta el servidor de desarrollo:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
+
+Abre [http://localhost:3000](http://localhost:3000) con tu navegador para ver el resultado.
 
 ## Learn More
 

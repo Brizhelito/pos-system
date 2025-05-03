@@ -19,7 +19,12 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@backend": ["./src/backend/"],
+      "@lib": ["./src/backend/lib/"],
+      "@utils": ["./src/backend/utils/"],
+      "@services": ["./src/backend/services/"],
+      "@prisma": ["./src/backend/prisma/"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
