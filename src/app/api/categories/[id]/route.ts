@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIronSession, IronSessionData } from "iron-session";
-import { sessionOptions } from "@/backend/lib/auth/auth";
-import { handleError } from "@/backend/lib/api/error";
+import { sessionOptions } from "@/lib/auth/auth";
+import { handleError } from "@/lib/api/error";
 import { 
   getCategoryById, 
   updateCategoryHandler, 
   deleteCategoryHandler 
-} from "@/backend/Service/CategoryService";
+} from "@/services/CategoryService";
 import { CategoryUpdateSchema } from "@/types/Category";
 
 // GET: Obtener una categoría específica por ID

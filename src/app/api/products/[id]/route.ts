@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIronSession, IronSessionData } from "iron-session";
-import { sessionOptions } from "@/backend/lib/auth/auth";
-import { handleError } from "@/backend/lib/api/error";
-import { 
-  getProductById, 
-  updateProductHandler, 
-  deleteProductHandler 
-} from "@/backend/Service/ProductService";
+import { sessionOptions } from "@/lib/auth/auth";
+import { handleError } from "@/lib/api/error";
+import {
+  getProductById,
+  updateProductHandler,
+  deleteProductHandler,
+} from "@/services/ProductService";
 import { ProductUpdateSchema } from "@/types/Products";
 
 // GET: Obtener un producto específico por ID

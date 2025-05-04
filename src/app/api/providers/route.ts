@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIronSession, IronSessionData } from "iron-session";
-import { sessionOptions } from "@/backend/lib/auth/auth";
-import { handleError } from "@/backend/lib/api/error";
-import { 
-  createProviderHandler, 
-  getProviders 
-} from "@/backend/Service/ProviderService";
+import { sessionOptions } from "@/lib/auth/auth";
+import { handleError } from "@/lib/api/error";
+import {
+  createProviderHandler,
+  getProviders,
+} from "@/services/ProviderService";
 import { ProviderCreateSchema } from "@/types/Provider";
 
 // GET: Obtener todos los proveedores

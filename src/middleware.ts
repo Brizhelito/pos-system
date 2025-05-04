@@ -1,7 +1,7 @@
 import { IronSessionData, getIronSession } from "iron-session";
 import { NextRequest, NextResponse } from "next/server";
 // Asegúrate que la ruta a sessionOptions es correcta según tu estructura
-import { sessionOptions } from "./backend/lib/auth/auth";
+import { sessionOptions } from "./lib/auth/auth";
 
 // --- Constantes para Roles y Rutas ---
 const ADMIN_ROLE = "ADMIN";

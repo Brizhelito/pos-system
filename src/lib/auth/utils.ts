@@ -1,5 +1,5 @@
 import { NextApiRequest } from "next";
-import { User } from "../../../../lib/prisma-client";
+import { User } from "../../../lib/prisma-client";
 import { createError } from "../api/error";
 
 export const requireAuth = async (req: NextApiRequest) => {

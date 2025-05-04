@@ -19,6 +19,19 @@ enum role {
   ADMIN
 }
 
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  OTHER
+}
+
+enum SaleStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   name      String
@@ -27,37 +40,39 @@ model User {
   role      role     @default(SELLER)
   createdAt DateTime
   updatedAt DateTime @default(now())
-  Sale      Sale?
+  Sale      Sale[]
 }
 
 model Product {
-  id            Int       @id @default(autoincrement())
+  id            Int        @id @default(autoincrement())
   name          String
   description   String?
   purchasePrice Int
   sellingPrice  Int
   stock         Int
   minStock      Int
-  categoryId    Int       @unique
-  category      Category  @relation(fields: [categoryId], references: [id])
-  providerId    Int       @unique
-  provider      Provider  @relation(fields: [providerId], references: [id])
-  saleItem      SaleItem?
+  categoryId    Int
+  category      Category   @relation(fields: [categoryId], references: [id], name: "ProductToCategory")
+  providerId    Int
+  provider      Provider   @relation(fields: [providerId], references: [id], name: "ProductToProvider")
+  saleItems     SaleItem[] @relation(name: "ProductToSaleItem")
   createdAt     DateTime
-  updatedAt     DateTime  @default(now())
+  updatedAt     DateTime   @default(now())
+
+  @@unique([providerId, categoryId], name: "unique_product_provider_category")
 }
 
 model Category {
-  id      Int      @id @default(autoincrement())
-  name    String   @unique
-  Product Product?
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[] @relation(name: "ProductToCategory")
 }
 
 model Provider {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   name        String
   contactInfo String
-  Product     Product?
+  products    Product[] @relation(name: "ProductToProvider")
 }
 
 enum Identifier {
@@ -76,30 +91,33 @@ model Customer {
   email      String
   createdAt  DateTime
   updateTime DateTime   @default(now())
-  Sale       Sale?
-  Invoice    Invoice?
+  Sale       Sale[]
+  Invoice    Invoice[]
 }
 
 model Sale {
-  id         Int        @id @default(autoincrement())
-  saleDate   DateTime
-  customerId Int        @unique
-  customer   Customer   @relation(fields: [customerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  userId     Int        @unique
-  user       User       @relation(fields: [userId], references: [id])
-  saleItem   SaleItem[]
-  Invoice    Invoice?
+  id            Int           @id @default(autoincrement())
+  saleDate      DateTime
+  customerId    Int
+  customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  userId        Int
+  user          User          @relation(fields: [userId], references: [id])
+  totalAmount   Decimal
+  paymentMethod PaymentMethod
+  status        SaleStatus
+  saleItems     SaleItem[]    @relation(name: "SaleToSaleItem")
+  Invoice       Invoice?
 }
 
 model SaleItem {
-  id           Int     @id @default(autoincrement())
-  saleId       Int
-  sale         Sale    @relation(fields: [saleId], references: [id])
-  productId    Int     @unique
-  product      Product @relation(fields: [productId], references: [id])
-  quantity     Int
-  unitPrice    Decimal
-  itemSubtotal Decimal
+  id        Int     @id @default(autoincrement())
+  saleId    Int
+  sale      Sale    @relation(fields: [saleId], references: [id], name: "SaleToSaleItem")
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], name: "ProductToSaleItem")
+  quantity  Int
+  unitPrice Decimal
+  subtotal  Decimal
 }
 
 model Invoice {

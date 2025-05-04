@@ -7,14 +7,16 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   ShoppingCart,
-  Users,
   Package,
   Settings,
   BarChart4,
-  Receipt,
   LogOut,
   ChevronRight,
   ChevronLeft,
+  Truck,
+  UserCircle,
+  FileText,
+  Store,
 } from "lucide-react";
 import { Button } from "../ui/button";
 
@@ -44,19 +46,31 @@ export function SidebarItem({
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-lg text-sm transition-all hover:bg-accent hover:text-accent-foreground",
+        "group flex items-center gap-3 rounded-lg text-sm transition-all duration-200 hover:scale-[1.02]",
         collapsed ? "justify-center py-3 px-2" : "py-2 px-4",
-        active ? "bg-accent/50 text-accent-foreground" : "text-muted-foreground",
+        active
+          ? "bg-primary/10 text-primary font-medium"
+          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
         className
       )}
       {...props}
     >
       <div className="flex items-center gap-3">
         {React.isValidElement(icon) &&
-          React.cloneElement(icon as React.ReactElement<any>, {
-            className: cn("size-5", collapsed && "size-6"),
-          })}
-        {!collapsed && <span>{label}</span>}
+          React.cloneElement(
+            icon as React.ReactElement<{ className?: string }>,
+            {
+              className: cn(
+                "size-5 transition-transform duration-200",
+                collapsed && "size-6",
+                active && "text-primary",
+                "group-hover:scale-110"
+              ),
+            }
+          )}
+        {!collapsed && (
+          <span className="transition-opacity duration-200">{label}</span>
+        )}
       </div>
     </Link>
   );
@@ -78,7 +92,7 @@ export function Sidebar({
     {
       icon: <ShoppingCart />,
       label: "Ventas",
-      href: "/admin/sales",
+      href: "/sales",
     },
     {
       icon: <Package />,
@@ -86,12 +100,22 @@ export function Sidebar({
       href: "/admin/products",
     },
     {
-      icon: <Receipt />,
+      icon: <Store />,
       label: "Inventario",
       href: "/admin/inventory",
     },
     {
-      icon: <Users />,
+      icon: <FileText />,
+      label: "Categorías",
+      href: "/admin/categories",
+    },
+    {
+      icon: <Truck />,
+      label: "Proveedores",
+      href: "/admin/suppliers",
+    },
+    {
+      icon: <UserCircle />,
       label: "Clientes",
       href: "/admin/customers",
     },
@@ -110,37 +134,42 @@ export function Sidebar({
   return (
     <div
       className={cn(
-        "flex flex-col h-screen bg-background border-r transition-all duration-300 shadow-sm",
+        "flex flex-col h-screen bg-background border-r shadow-sm transition-all duration-300",
         collapsed ? "w-16" : "w-64",
         className
       )}
       {...props}
     >
-      <div className={cn(
-        "py-4 flex justify-between items-center border-b",
-        collapsed ? "px-3" : "px-4"
-      )}>
+      <div
+        className={cn(
+          "py-4 flex justify-between items-center border-b",
+          collapsed ? "px-3" : "px-4"
+        )}
+      >
         {!collapsed && (
-          <h2 className="text-lg font-semibold text-foreground">POS Admin</h2>
+          <h2 className="text-lg font-semibold text-foreground transition-opacity duration-300">
+            POS Admin
+          </h2>
         )}
         <Button
           variant="ghost"
           size="icon"
           onClick={onToggle}
           className={cn(
-            "rounded-full p-0 size-8 text-muted-foreground hover:bg-accent",
+            "rounded-full p-0 size-8 text-muted-foreground hover:bg-accent transition-colors duration-200",
             collapsed && "mx-auto"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
+          {collapsed ? (
+            <ChevronRight className="size-4" />
+          ) : (
+            <ChevronLeft className="size-4" />
+          )}
         </Button>
       </div>
-      
-      <nav className={cn(
-        "flex-1 py-3 space-y-1",
-        collapsed ? "px-2" : "px-3"
-      )}>
+
+      <nav className={cn("flex-1 py-3 space-y-1", collapsed ? "px-2" : "px-3")}>
         {navItems.map((item, index) => (
           <SidebarItem
             key={index}
@@ -152,11 +181,8 @@ export function Sidebar({
           />
         ))}
       </nav>
-      
-      <div className={cn(
-        "border-t py-3",
-        collapsed ? "px-2" : "px-3"
-      )}>
+
+      <div className={cn("border-t py-3", collapsed ? "px-2" : "px-3")}>
         <SidebarItem
           icon={<LogOut />}
           label="Cerrar sesión"

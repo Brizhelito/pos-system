@@ -4,7 +4,7 @@ import {
   IronSession,
   IronSessionData,
 } from "iron-session";
-import type { User } from "../../../lib/prisma-client";
+import { User } from "../../../lib/prisma-client";
 import { NextApiRequest, NextApiResponse } from "next";
 export const sessionOptions: SessionOptions = {
   password:
@@ -16,7 +16,6 @@ export const sessionOptions: SessionOptions = {
   },
 };
 
-// Extendemos la interfaz de IronSessionData para incluir el usuario
 declare module "iron-session" {
   interface IronSessionData {
     user?: User;

@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Search } from "lucide-react";
+import { X } from "lucide-react";
 import { Table } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,6 @@ export function DataTableToolbar<TData>({
   table,
   searchColumn,
   searchPlaceholder = "Buscar...",
-  filterColumn,
-  filterOptions,
   addNewButton,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0;
@@ -39,7 +37,9 @@ export function DataTableToolbar<TData>({
         {searchColumn && (
           <Input
             placeholder={searchPlaceholder}
-            value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ""}
+            value={
+              (table.getColumn(searchColumn)?.getFilterValue() as string) ?? ""
+            }
             onChange={(event) =>
               table.getColumn(searchColumn)?.setFilterValue(event.target.value)
             }
@@ -59,9 +59,7 @@ export function DataTableToolbar<TData>({
       </div>
       <div className="flex items-center space-x-2">
         {addNewButton && (
-          <Button onClick={addNewButton.onClick}>
-            {addNewButton.label}
-          </Button>
+          <Button onClick={addNewButton.onClick}>{addNewButton.label}</Button>
         )}
         <DataTableViewOptions table={table} />
       </div>

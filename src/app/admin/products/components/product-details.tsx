@@ -57,8 +57,8 @@ export function ProductDetails({
       : "success";
 
   return (
-    <Dialog open={open} onOpenChange={onClose} >
-      <DialogContent className="sm:max-w-[600px] max-h-screen overflow-x-scroll">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px] max-h-screen overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             {product.name}
@@ -66,9 +66,7 @@ export function ProductDetails({
               ID: {product.id}
             </Badge>
           </DialogTitle>
-          <DialogDescription>
-            Detalles completos del producto
-          </DialogDescription>
+          <DialogDescription>Detalles completos del producto</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -86,7 +84,9 @@ export function ProductDetails({
               </div>
               <div className="flex justify-between py-1 border-b">
                 <span className="font-medium">Descripción:</span>
-                <span className="text-right">{product.description || "No hay descripción"}</span>
+                <span className="text-right">
+                  {product.description || "No hay descripción"}
+                </span>
               </div>
             </div>
           </div>
@@ -97,16 +97,25 @@ export function ProductDetails({
             <div className="mt-2 grid grid-cols-1 gap-1 text-sm">
               <div className="flex justify-between py-1 border-b">
                 <span className="font-medium">Precio de compra:</span>
-                <span className="font-bold">{formatCurrency(product.purchasePrice)}</span>
+                <span className="font-bold">
+                  {formatCurrency(product.purchasePrice)}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b">
                 <span className="font-medium">Precio de venta:</span>
-                <span className="font-bold">{formatCurrency(product.sellingPrice)}</span>
+                <span className="font-bold">
+                  {formatCurrency(product.sellingPrice)}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b">
                 <span className="font-medium">Margen de ganancia:</span>
                 <span>
-                  {((product.sellingPrice - product.purchasePrice) / product.purchasePrice * 100).toFixed(2)}%
+                  {(
+                    ((product.sellingPrice - product.purchasePrice) /
+                      product.purchasePrice) *
+                    100
+                  ).toFixed(2)}
+                  %
                 </span>
               </div>
             </div>

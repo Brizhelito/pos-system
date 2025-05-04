@@ -12,12 +12,14 @@ export default function AdminLayout({
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar 
-        collapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      
-      <main className={`flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 overflow-y-auto transition-all duration-300 `}>
+
+      <main
+        className={` flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 overflow-y-auto transition-all duration-300 `}
+      >
         {children}
       </main>
     </div>

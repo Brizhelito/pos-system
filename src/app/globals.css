@@ -10,13 +10,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans); /* Asegúrate que estas fuentes estén definidas o usa las tuyas */
-  --font-mono: var(--font-geist-mono);  /* Asegúrate que estas fuentes estén definidas o usa las tuyas */
-  /* Variables omitidas para brevedad - asegúrate de incluir todas las necesarias para tus componentes */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
-  --color-destructive-foreground: var(--destructive-foreground); /* Añadida para texto en botones destructivos */
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
@@ -36,90 +35,119 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Tema Claro (Root) - Tema Seguridad Incendios */
+/* Tema Claro (Root) */
 :root {
-  --radius: 0.625rem; /* Radio base para bordes redondeados */
-  --background: oklch(0.98 0 0); /* Gris muy claro / Casi blanco */
-  --foreground: oklch(0.15 0.01 25); /* Gris muy oscuro, ligero tinte rojo */
-  --card: oklch(1 0 0); /* Blanco */
-  --card-foreground: oklch(0.15 0.01 25); /* Gris muy oscuro */
-  --popover: oklch(1 0 0); /* Blanco */
-  --popover-foreground: oklch(0.15 0.01 25); /* Gris muy oscuro */
+  --radius: 0.625rem;
+  --background: oklch(0.98 0 0); /* Blanco suave */
+  --foreground: oklch(0.2 0.01 250); /* Azul grisáceo oscuro */
+  --card: oklch(1 0 0); /* Blanco puro */
+  --card-foreground: oklch(0.2 0.01 250); /* Azul grisáceo oscuro */
+  --popover: oklch(1 0 0); /* Blanco puro */
+  --popover-foreground: oklch(0.2 0.01 250); /* Azul grisáceo oscuro */
 
-  --primary: oklch(0.6 0.24 27); /* Rojo principal (brillante y claro) */
-  --primary-foreground: oklch(0.98 0 0); /* Blanco para texto sobre rojo */
+  --primary: oklch(0.6 0.12 250); /* Azul suave */
+  --primary-foreground: oklch(0.98 0 0); /* Blanco */
 
-  --secondary: oklch(0.94 0.01 25); /* Gris claro */
-  --secondary-foreground: oklch(0.3 0.01 25); /* Gris oscuro para texto sobre secundario */
+  --secondary: oklch(0.95 0.01 250); /* Azul grisáceo muy claro */
+  --secondary-foreground: oklch(0.2 0.01 250); /* Azul grisáceo oscuro */
 
-  --muted: oklch(0.94 0.01 25); /* Gris claro (igual que secundario) */
-  --muted-foreground: oklch(0.5 0.01 25); /* Gris medio */
+  --muted: oklch(0.95 0.01 250); /* Azul grisáceo muy claro */
+  --muted-foreground: oklch(0.4 0.01 250); /* Azul grisáceo medio */
 
-  --accent: oklch(0.94 0.01 25); /* Gris claro (igual que secundario) */
-  --accent-foreground: oklch(0.3 0.01 25); /* Gris oscuro */
+  --accent: oklch(0.95 0.01 250); /* Azul grisáceo muy claro */
+  --accent-foreground: oklch(0.2 0.01 250); /* Azul grisáceo oscuro */
 
-  --destructive: oklch(0.58 0.26 26); /* Rojo destructivo (un poco más oscuro/intenso) */
-  --destructive-foreground: oklch(0.98 0 0); /* Blanco para texto sobre rojo destructivo */
+  --destructive: oklch(0.6 0.2 30); /* Naranja suave */
+  --destructive-foreground: oklch(0.98 0 0); /* Blanco */
 
-  --border: oklch(0.9 0.01 25); /* Gris muy claro para bordes */
-  --input: oklch(0.9 0.01 25); /* Gris muy claro para inputs */
-  --ring: oklch(0.6 0.24 27 / 50%); /* Rojo primario semi-transparente para focus rings */
+  --border: oklch(0.9 0.01 250); /* Azul grisáceo muy claro */
+  --input: oklch(0.9 0.01 250); /* Azul grisáceo muy claro */
+  --ring: oklch(0.6 0.12 250 / 50%); /* Azul primario semi-transparente */
 
-  /* Colores para gráficos (ejemplo, ajustar según necesidad) */
-  --chart-1: oklch(0.6 0.24 27);   /* Rojo primario */
-  --chart-2: oklch(0.7 0.15 30);   /* Naranja/Rojo claro */
-  --chart-3: oklch(0.5 0.05 25);   /* Gris medio */
-  --chart-4: oklch(0.8 0.02 25);   /* Gris claro */
-  --chart-5: oklch(0.4 0.01 25);   /* Gris oscuro */
+  /* Colores para estados y variantes */
+  --success: oklch(0.6 0.12 150); /* Verde suave */
+  --success-foreground: oklch(0.98 0 0); /* Blanco */
+  
+  --warning: oklch(0.6 0.2 50); /* Amarillo suave */
+  --warning-foreground: oklch(0.2 0.01 250); /* Azul grisáceo oscuro */
+  
+  --info: oklch(0.6 0.12 200); /* Azul verdoso */
+  --info-foreground: oklch(0.98 0 0); /* Blanco */
+  
+  --alert: oklch(0.6 0.2 30); /* Naranja suave */
+  --alert-foreground: oklch(0.98 0 0); /* Blanco */
+  
+  --neutral: oklch(0.5 0.01 250); /* Azul grisáceo medio */
+  --neutral-foreground: oklch(0.98 0 0); /* Blanco */
+
+  /* Colores para gráficos */
+  --chart-1: oklch(0.6 0.12 250);   /* Azul primario */
+  --chart-2: oklch(0.7 0.15 200);   /* Azul verdoso */
+  --chart-3: oklch(0.5 0.05 150);   /* Verde suave */
+  --chart-4: oklch(0.8 0.02 100);   /* Verde claro */
+  --chart-5: oklch(0.4 0.01 50);    /* Morado suave */
 }
 
-/* Tema Oscuro - Tema Seguridad Incendios */
+/* Tema Oscuro */
 .dark {
-  --background: oklch(0.15 0.01 25); /* Gris muy oscuro, ligero tinte rojo */
-  --foreground: oklch(0.95 0.01 25); /* Gris muy claro */
+  --background: oklch(0.15 0.01 250); /* Azul grisáceo muy oscuro */
+  --foreground: oklch(0.95 0.01 250); /* Azul grisáceo muy claro */
 
-  --card: oklch(0.20 0.015 26); /* Gris oscuro (ligeramente más claro que el fondo) */
-  --card-foreground: oklch(0.95 0.01 25); /* Gris muy claro */
-  --popover: oklch(0.20 0.015 26); /* Gris oscuro */
-  --popover-foreground: oklch(0.95 0.01 25); /* Gris muy claro */
+  --card: oklch(0.2 0.01 250); /* Azul grisáceo oscuro */
+  --card-foreground: oklch(0.95 0.01 250); /* Azul grisáceo muy claro */
+  --popover: oklch(0.2 0.01 250); /* Azul grisáceo oscuro */
+  --popover-foreground: oklch(0.95 0.01 250); /* Azul grisáceo muy claro */
 
-  --primary: oklch(0.65 0.25 28); /* Rojo principal (más brillante en modo oscuro) */
-  --primary-foreground: oklch(0.1 0 0); /* Negro/Gris muy oscuro para texto sobre rojo */
+  --primary: oklch(0.65 0.15 250); /* Azul brillante */
+  --primary-foreground: oklch(0.1 0 0); /* Negro */
 
-  --secondary: oklch(0.25 0.02 27); /* Gris oscuro medio */
-  --secondary-foreground: oklch(0.95 0.01 25); /* Gris muy claro */
+  --secondary: oklch(0.25 0.02 250); /* Azul grisáceo oscuro */
+  --secondary-foreground: oklch(0.95 0.01 250); /* Azul grisáceo muy claro */
 
-  --muted: oklch(0.25 0.02 27); /* Gris oscuro medio */
-  --muted-foreground: oklch(0.65 0.01 25); /* Gris medio claro */
+  --muted: oklch(0.25 0.02 250); /* Azul grisáceo oscuro */
+  --muted-foreground: oklch(0.65 0.01 250); /* Azul grisáceo medio */
 
-  --accent: oklch(0.25 0.02 27); /* Gris oscuro medio */
-  --accent-foreground: oklch(0.95 0.01 25); /* Gris muy claro */
+  --accent: oklch(0.25 0.02 250); /* Azul grisáceo oscuro */
+  --accent-foreground: oklch(0.95 0.01 250); /* Azul grisáceo muy claro */
 
-  --destructive: oklch(0.7 0.26 30); /* Rojo destructivo brillante para destacar en oscuro */
-  --destructive-foreground: oklch(0.1 0 0); /* Negro/Gris muy oscuro para texto sobre rojo destructivo */
+  --destructive: oklch(0.7 0.2 30); /* Naranja brillante */
+  --destructive-foreground: oklch(0.1 0 0); /* Negro */
 
-  --border: oklch(1 0 0 / 15%); /* Blanco con baja opacidad para bordes */
-  --input: oklch(1 0 0 / 20%); /* Blanco con un poco más de opacidad para inputs */
-  --ring: oklch(0.65 0.25 28 / 50%); /* Rojo primario semi-transparente para focus rings */
+  --border: oklch(1 0 0 / 15%); /* Blanco con baja opacidad */
+  --input: oklch(1 0 0 / 20%); /* Blanco con un poco más de opacidad */
+  --ring: oklch(0.65 0.15 250 / 50%); /* Azul primario semi-transparente */
 
-  /* Colores para gráficos (ejemplo, ajustar según necesidad) */
-  --chart-1: oklch(0.65 0.25 28);   /* Rojo primario oscuro */
-  --chart-2: oklch(0.75 0.2 32);   /* Naranja/Rojo más brillante */
-  --chart-3: oklch(0.6 0.02 25);   /* Gris medio */
-  --chart-4: oklch(0.4 0.01 25);   /* Gris oscuro */
-  --chart-5: oklch(0.8 0.01 25);   /* Gris claro */
+  /* Colores para estados y variantes */
+  --success: oklch(0.65 0.15 150); /* Verde brillante */
+  --success-foreground: oklch(0.1 0 0); /* Negro */
+  
+  --warning: oklch(0.7 0.2 50); /* Amarillo brillante */
+  --warning-foreground: oklch(0.1 0 0); /* Negro */
+  
+  --info: oklch(0.65 0.15 200); /* Azul verdoso brillante */
+  --info-foreground: oklch(0.1 0 0); /* Negro */
+  
+  --alert: oklch(0.7 0.2 30); /* Naranja brillante */
+  --alert-foreground: oklch(0.1 0 0); /* Negro */
+  
+  --neutral: oklch(0.6 0.01 250); /* Azul grisáceo medio */
+  --neutral-foreground: oklch(0.1 0 0); /* Negro */
+
+  /* Colores para gráficos */
+  --chart-1: oklch(0.65 0.15 250);   /* Azul primario oscuro */
+  --chart-2: oklch(0.75 0.2 200);   /* Azul verdoso brillante */
+  --chart-3: oklch(0.6 0.02 150);   /* Verde medio */
+  --chart-4: oklch(0.4 0.01 100);   /* Verde oscuro */
+  --chart-5: oklch(0.8 0.01 50);    /* Morado claro */
 }
 
 /* Estilos base aplicados a la capa 'base' de Tailwind */
 @layer base {
   * {
-    /* Aplica el color de borde y un outline sutil para el foco */
     @apply border-border outline-ring/50;
   }
   body {
-    /* Aplica los colores de fondo y texto base */
     @apply bg-background text-foreground;
-    /* Opcional: Habilita suavizado de fuentes */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

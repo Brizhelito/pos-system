@@ -1,7 +1,7 @@
-import { createUser } from "@/backend/Service/AuthService"; // Adjust path as needed
+import { createUser } from "@/services/AuthService"; // Adjust path as needed
 import { NextRequest, NextResponse } from "next/server";
 import { CreateUserSchema, PublicUserSchema } from "@/types/User"; // Adjust path as needed
-import { handleError } from "@/backend/lib/api/error"; // Adjust path as needed
+import { handleError } from "@/lib/api/error"; // Adjust path as needed
 import z from "zod"; // Import zod for validation
 
 // Define the expected response type for success or error

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIronSession, IronSessionData } from "iron-session";
-import { sessionOptions } from "@/backend/lib/auth/auth";
-import { handleError } from "@/backend/lib/api/error";
-import { 
-  createProductHandler, 
-  getProducts, 
-  searchProducts 
-} from "@/backend/Service/ProductService";
+import { sessionOptions } from "@/lib/auth/auth";
+import { handleError } from "@/lib/api/error";
+import {
+  getProducts,
+  searchProducts,
+  createProductHandler,
+} from "@/services/ProductService";
 import { ProductCreateSchema } from "@/types/Products";
 
 // GET: Obtener todos los productos o buscar por término de búsqueda

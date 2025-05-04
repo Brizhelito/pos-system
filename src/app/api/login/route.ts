@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { loginUser } from "@/backend/Service/AuthService";
+import { loginUser } from "@/services/AuthService";
 import { LoginRequestSchema } from "@/types/User";
 import { getIronSession, IronSessionData } from "iron-session";
-import { sessionOptions } from "@/backend/lib/auth/auth";
-import { handleError } from "@/backend/lib/api/error";
+import { sessionOptions } from "@/lib/auth/auth";
+import { handleError } from "@/lib/api/error";
 
 export async function POST(req: NextRequest) {
   try {

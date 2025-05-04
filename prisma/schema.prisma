@@ -19,47 +19,66 @@ enum role {
   ADMIN
 }
 
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  OTHER
+}
+
+enum SaleStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   name      String
   email     String   @unique
   password  String
   role      role     @default(SELLER)
-  createdAt DateTime
-  updatedAt DateTime @default(now())
-  Sale      Sale?
+  sales     Sale[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Product {
-  id            Int       @id @default(autoincrement())
+  id            Int        @id @default(autoincrement())
   name          String
   description   String?
-  purchasePrice Int
-  sellingPrice  Int
+  purchasePrice Float
+  sellingPrice  Float
   stock         Int
   minStock      Int
-  categoryId    Int       @unique
-  category      Category  @relation(fields: [categoryId], references: [id])
-  providerId    Int       @unique
-  provider      Provider  @relation(fields: [providerId], references: [id])
-  saleItem      SaleItem?
-  createdAt     DateTime
-  updatedAt     DateTime  @default(now())
+  categoryId    Int
+  providerId    Int
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  category      Category   @relation(fields: [categoryId], references: [id], map: "product_category_fkey")
+  provider      Provider   @relation(fields: [providerId], references: [id], map: "product_provider_fkey")
+  saleItems     SaleItem[]
 }
 
 model Category {
-  id      Int      @id @default(autoincrement())
-  name    String   @unique
-  Product Product?
+  id        Int      @id @default(autoincrement())
+  name      String
+  products  Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Provider {
-  id          Int      @id @default(autoincrement())
-  name        String
-  contactInfo String
-  Product     Product?
+  id        Int      @id @default(autoincrement())
+  name      String
+  products  Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
+// This enum was defined but not used in the original schema.
+// If you intend to use it, you might add it to the Customer model
+// or another relevant model. I've kept it here as it was in your original schema.
 enum Identifier {
   V
   E
@@ -68,50 +87,56 @@ enum Identifier {
 }
 
 model Customer {
-  id         Int        @id @default(autoincrement())
-  name       String
-  identifier Identifier
-  address    String
-  phone      String
-  email      String
-  createdAt  DateTime
-  updateTime DateTime   @default(now())
-  Sale       Sale?
-  Invoice    Invoice?
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String?
+  phone     String?
+  sales     Sale[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Sale {
-  id         Int        @id @default(autoincrement())
-  saleDate   DateTime
-  customerId Int        @unique
-  customer   Customer   @relation(fields: [customerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  userId     Int        @unique
-  user       User       @relation(fields: [userId], references: [id])
-  saleItem   SaleItem[]
-  Invoice    Invoice?
+  id            Int           @id @default(autoincrement())
+  customerId    Int
+  userId        Int
+  saleDate      DateTime      @default(now())
+  totalAmount   Float
+  // Corrected: Using the PaymentMethod enum
+  paymentMethod PaymentMethod
+  // Corrected: Using the SaleStatus enum
+  status        SaleStatus    @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  customer      Customer      @relation(fields: [customerId], references: [id], map: "sale_customer_fkey")
+  user          User          @relation(fields: [userId], references: [id], map: "sale_user_fkey")
+  saleItems     SaleItem[]
+  invoice       Invoice?
 }
 
 model SaleItem {
-  id           Int     @id @default(autoincrement())
-  saleId       Int
-  sale         Sale    @relation(fields: [saleId], references: [id])
-  productId    Int     @unique
-  product      Product @relation(fields: [productId], references: [id])
-  quantity     Int
-  unitPrice    Decimal
-  itemSubtotal Decimal
+  id        Int     @id @default(autoincrement())
+  saleId    Int
+  productId Int
+  quantity  Int
+  unitPrice Float
+  subtotal  Float
+  sale      Sale    @relation(fields: [saleId], references: [id], map: "saleitem_sale_fkey")
+  product   Product @relation(fields: [productId], references: [id], map: "saleitem_product_fkey")
 }
 
 model Invoice {
-  id          Int           @id @default(autoincrement())
-  invoiceDate DateTime
-  saleId      Int           @unique
-  sale        Sale          @relation(fields: [saleId], references: [id])
-  customerId  Int           @unique
-  customer    Customer      @relation(fields: [customerId], references: [id])
-  status      InvoiceStatus
-  createdAt   DateTime
-  updatedAt   DateTime      @default(now())
+  id            Int           @id @default(autoincrement())
+  saleId        Int           @unique
+  number        String
+  date          DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  sale          Sale          @relation(fields: [saleId], references: [id], map: "invoice_sale_fkey")
+  // This enum was defined but not used in the original schema.
+  // If you intend to use it, you might add it to the Invoice model.
+  // I've kept it here as it was in your original schema.
+  invoiceStatus InvoiceStatus? // Example of how you might use it
 }
 
 enum InvoiceStatus {

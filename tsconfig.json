@@ -20,11 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@backend": ["./src/backend/"],
-      "@lib": ["./src/backend/lib/"],
-      "@utils": ["./src/backend/utils/"],
-      "@services": ["./src/backend/services/"],
-      "@prisma": ["./src/backend/prisma/"]
+      "@prisma": ["./lib/prisma-client"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

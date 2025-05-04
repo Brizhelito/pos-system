@@ -74,7 +74,9 @@ export const productColumns: ColumnDef<ProductWithRelations>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div className="font-medium">{row.getValue("name")}</div>,
+    cell: ({ row }) => (
+      <div className="font-medium">{row.getValue("name")}</div>
+    ),
   },
   {
     accessorKey: "description",
@@ -93,7 +95,7 @@ export const productColumns: ColumnDef<ProductWithRelations>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Precio Compra
+          Precio de Compra
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -102,7 +104,7 @@ export const productColumns: ColumnDef<ProductWithRelations>[] = [
       const amount = parseFloat(row.getValue("purchasePrice"));
       const formatted = new Intl.NumberFormat("es-ES", {
         style: "currency",
-        currency: "EUR", // Change to your currency
+        currency: "USD",
       }).format(amount);
 
       return <div className="text-right">{formatted}</div>;
@@ -116,7 +118,7 @@ export const productColumns: ColumnDef<ProductWithRelations>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Precio Venta
+          Precio de Venta
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -125,7 +127,7 @@ export const productColumns: ColumnDef<ProductWithRelations>[] = [
       const amount = parseFloat(row.getValue("sellingPrice"));
       const formatted = new Intl.NumberFormat("es-ES", {
         style: "currency",
-        currency: "EUR", // Change to your currency
+        currency: "USD",
       }).format(amount);
 
       return <div className="text-right">{formatted}</div>;
@@ -139,7 +141,7 @@ export const productColumns: ColumnDef<ProductWithRelations>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Stock
+          Inventario
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -147,20 +149,21 @@ export const productColumns: ColumnDef<ProductWithRelations>[] = [
     cell: ({ row }) => {
       const stock = parseInt(row.getValue("stock"), 10);
       const minStock = row.original.minStock;
-      
+
       return (
-        <div className="text-center">
-          {stock <= minStock ? (
-            <Badge variant="destructive">{stock.toString()}</Badge>
-          ) : (
-            <Badge variant="default">{stock.toString()}</Badge>
+        <div className="flex items-center gap-2">
+          <div className="text-right w-20">{stock}</div>
+          {stock <= minStock && (
+            <Badge variant="destructive" className="text-xs">
+              Stock Bajo
+            </Badge>
           )}
         </div>
       );
     },
   },
   {
-    accessorKey: "category.name",
+    accessorKey: "category",
     header: ({ column }) => {
       return (
         <Button
@@ -178,8 +181,18 @@ export const productColumns: ColumnDef<ProductWithRelations>[] = [
     },
   },
   {
-    accessorKey: "provider.name",
-    header: "Proveedor",
+    accessorKey: "provider",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Proveedor
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       const providerName = row.original.provider?.name || "-";
       return <div className="text-center">{providerName}</div>;
@@ -201,26 +214,20 @@ export const productColumns: ColumnDef<ProductWithRelations>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(product.id.toString())}
-            >
-              Copiar ID
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => window.productActions?.onView(product)}
+            >
+              Ver detalles
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => window.productActions?.onEdit(product)}
             >
               Editar
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => window.productActions?.onView(product)}
-              className="text-blue-600"
-            >
-              Ver detalles
-            </DropdownMenuItem>
-            <DropdownMenuItem
               onClick={() => window.productActions?.onDelete(product)}
-              className="text-red-600"
+              className="text-destructive"
             >
               Eliminar
             </DropdownMenuItem>

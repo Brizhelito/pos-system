@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIronSession, IronSessionData } from "iron-session";
 // Adjust the import path for your session options
-import { sessionOptions } from "@/backend/lib/auth/auth";
+import { sessionOptions } from "@/lib/auth/auth";
 // Adjust the import path for your error handler
-import { handleError } from "@/backend/lib/api/error";
+import { handleError } from "@/lib/api/error";
 
 // Define the expected response type for success or error
 type LogoutResponse =

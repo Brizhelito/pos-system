@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIronSession, IronSessionData } from "iron-session";
-import { sessionOptions } from "@/backend/lib/auth/auth";
-import { handleError } from "@/backend/lib/api/error";
-import { 
-  getProviderById, 
-  updateProviderHandler, 
-  deleteProviderHandler 
-} from "@/backend/Service/ProviderService";
+import { sessionOptions } from "@/lib/auth/auth";
+import { handleError } from "@/lib/api/error";
+import {
+  getProviderById,
+  updateProviderHandler,
+  deleteProviderHandler,
+} from "@/services/ProviderService";
 import { ProviderUpdateSchema } from "@/types/Provider";
 
 // GET: Obtener un proveedor específico por ID
