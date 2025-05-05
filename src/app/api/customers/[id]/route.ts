@@ -43,7 +43,7 @@ export async function PUT(
     const body = await request.json();
     
     // Validar que haya al menos un campo para actualizar
-    if (!body.name && body.email === undefined && body.phone === undefined) {
+    if (!body.name && body.email === undefined && body.phone === undefined && body.cedula === undefined) {
       return NextResponse.json(
         { error: "Debe proporcionar al menos un campo para actualizar" },
         { status: 400 }
@@ -53,6 +53,7 @@ export async function PUT(
     const customerData: CustomerUpdate = {};
     
     if (body.name) customerData.name = body.name;
+    if (body.cedula !== undefined) customerData.cedula = body.cedula;
     if (body.email !== undefined) customerData.email = body.email;
     if (body.phone !== undefined) customerData.phone = body.phone;
     

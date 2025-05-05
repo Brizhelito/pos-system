@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getIronSession, IronSessionData } from "iron-session";
 import { sessionOptions } from "@/lib/auth/auth";
 import { handleError } from "@/lib/api/error";
-import {
-  getProducts,
-  searchProducts,
-  createProductHandler,
-} from "@/services/ProductService";
+import { ProductService } from "@/services/ProductService";
 import { ProductCreateSchema } from "@/types/Products";
 
-// GET: Obtener todos los productos o buscar por término de búsqueda
+// Instancia del servicio de productos
+const productService = new ProductService();
+
+// GET: Obtener todos los productos o buscar por término de búsqueda con soporte de paginación
 export async function GET(req: NextRequest) {
   try {
     // Verificar autenticación
@@ -27,19 +26,26 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Obtener parámetros de búsqueda si existen
+    // Extraer parámetros de la URL
     const { searchParams } = new URL(req.url);
-    const searchQuery = searchParams.get('q');
-    
-    // Si hay un término de búsqueda, realizar búsqueda
-    let products;
-    if (searchQuery) {
-      products = await searchProducts(searchQuery);
-    } else {
-      // Si no hay término de búsqueda, obtener todos los productos
-      products = await getProducts();
-    }
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "0"); // 0 significa todos
+    const searchQuery = searchParams.get("q") || "";
 
+    // Si hay un término de búsqueda y no hay paginación, usar la búsqueda simple
+    if (searchQuery && !pageSize) {
+      const products = await productService.searchProducts(searchQuery);
+      return NextResponse.json(products);
+    }
+    
+    // Si hay paginación
+    if (pageSize > 0) {
+      const result = await productService.getProductsPaginated(page, pageSize, searchQuery);
+      return NextResponse.json(result);
+    }
+    
+    // Caso por defecto: traer todos los productos
+    const products = await productService.getProducts();
     return NextResponse.json(products);
   } catch (error) {
     const apiErrorResponse = handleError(error);
@@ -79,7 +85,7 @@ export async function POST(req: NextRequest) {
     const validatedData = ProductCreateSchema.parse(body);
     
     // Crear producto usando el servicio
-    const newProduct = await createProductHandler(validatedData);
+    const newProduct = await productService.createProduct(validatedData);
     
     return NextResponse.json(newProduct, { status: 201 });
   } catch (error) {

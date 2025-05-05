@@ -276,6 +276,65 @@ export class ProductService {
   }
 
   /**
+   * Obtiene productos paginados
+   * @param page - Número de página
+   * @param pageSize - Tamaño de la página
+   * @param search - Término de búsqueda (opcional)
+   * @returns Lista de productos paginados con información de paginación
+   * @throws APIError si ocurre un error durante la búsqueda
+   */
+  async getProductsPaginated(page: number, pageSize: number, search: string = "") {
+    try {
+      // Calcular el offset
+      const skip = (page - 1) * pageSize;
+
+      // Preparar el filtro de búsqueda si existe
+      const where = search
+        ? {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { description: { contains: search, mode: 'insensitive' } },
+              { barcode: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+        : {};
+
+      // Consultar los productos con paginación
+      const products = await prisma.product.findMany({
+        where,
+        skip,
+        take: pageSize,
+        include: {
+          category: true,
+          provider: true,
+        },
+        orderBy: {
+          updatedAt: "desc",
+        },
+      });
+
+      // Contar el total de productos (para cálculos de paginación)
+      const total = await prisma.product.count({ where });
+
+      return {
+        data: products,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages: Math.ceil(total / pageSize),
+        },
+      };
+    } catch (error) {
+      this.handleError(
+        error,
+        "Error al obtener productos paginados",
+        "PRODUCTS_PAGINATED_FETCH_FAILED"
+      );
+    }
+  }
+
+  /**
    * Verifica si un producto existe
    * @param id - ID del producto
    * @throws APIError si el producto no existe
@@ -328,3 +387,5 @@ export const updateProductHandler = (data: ProductUpdate) =>
   productService.updateProduct(data);
 export const deleteProductHandler = (id: number) =>
   productService.deleteProduct(id);
+export const getProductsPaginated = (page: number, pageSize: number, search: string) =>
+  productService.getProductsPaginated(page, pageSize, search);

@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
     const filters: CustomerFilters = {};
     
     if (searchParams.has("name")) filters.name = searchParams.get("name") as string;
+    if (searchParams.has("cedula")) filters.cedula = searchParams.get("cedula") as string;
     if (searchParams.has("email")) filters.email = searchParams.get("email") as string;
     if (searchParams.has("phone")) filters.phone = searchParams.get("phone") as string;
     
@@ -53,6 +54,7 @@ export async function POST(request: NextRequest) {
     
     const customerData: CustomerCreate = {
       name: body.name,
+      cedula: body.cedula,
       email: body.email,
       phone: body.phone,
     };

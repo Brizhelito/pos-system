@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+
 export class APIError extends Error {
   constructor(
     public message: string,
@@ -19,17 +21,21 @@ export const createError = (
 
 export const handleError = (error: unknown) => {
   if (error instanceof APIError) {
-    return {
-      message: error.message,
-      code: error.code,
-      statusCode: error.statusCode,
-    };
+    return NextResponse.json(
+      {
+        message: error.message,
+        code: error.code,
+      },
+      { status: error.statusCode }
+    );
   }
 
   console.error("Unhandled error:", error);
-  return {
-    message: "Internal Server Error",
-    code: "INTERNAL_SERVER_ERROR",
-    statusCode: 500,
-  };
+  return NextResponse.json(
+    {
+      message: "Internal Server Error",
+      code: "INTERNAL_SERVER_ERROR",
+    },
+    { status: 500 }
+  );
 };

@@ -25,20 +25,7 @@ export async function POST(req: NextRequest) {
     await session.save();
     return response;
   } catch (error) {
-    const apiErrorResponse = handleError(error);
+    return handleError(error);
 
-    // Use the result from handleError to construct the NextResponse
-    // This ensures a consistent error format and status code
-    console.error("An error occurred, handled response:", apiErrorResponse);
-
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-        // Optionally, include other fields from apiErrorResponse if your handleError returns them
-        // details: apiErrorResponse.details,
-      },
-      { status: apiErrorResponse.statusCode } // Use the status code from handleError
-    );
   }
 }

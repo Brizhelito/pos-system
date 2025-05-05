@@ -6,6 +6,11 @@ export const CustomerBaseSchema = z.object({
     .string()
     .min(1, "El nombre es requerido")
     .max(100, "El nombre no puede exceder los 100 caracteres"),
+  cedula: z
+    .string()
+    .regex(/^[VE]-\d+$/, "Formato de cédula inválido. Use V-XXXXXXXX o E-XXXXXXX")
+    .nullable()
+    .optional(),
   email: z.string().email("Email inválido").nullable().optional(),
   phone: z
     .string()
@@ -46,6 +51,7 @@ export type Customer = z.infer<typeof CustomerSchema>;
 // --- Filters Schema ---
 export const CustomerFiltersSchema = z.object({
   name: z.string().optional(),
+  cedula: z.string().optional(),
   email: z.string().optional(),
   phone: z.string().optional(),
   startDate: z.date().optional(),

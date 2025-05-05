@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { ThemeProvider } from "./providers";
+import { ThemeProvider } from "./providers"
+import { SalesProvider } from "@/providers/SalesProvider";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const geistSans = Geist({
@@ -22,20 +23,28 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="es" suppressHydrationWarning>
+      <head />
       <body
-        className={`${geistSans.variable} ${geistMono.variable}  max-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900`}
+        className={`${geistSans.variable} ${geistMono.variable}  max-h-screen overflow-scroll`}
       >
-        <ThemeProvider>
-          <div className="absolute top-4 right-4">
-            <ThemeToggle />
-          </div>
-          {children}
-          <Toaster richColors />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SalesProvider>
+            <div className="absolute top-4 right-4">
+              <ThemeToggle />
+            </div>
+            {children}
+            <Toaster richColors />
+          </SalesProvider>
         </ThemeProvider>
       </body>
     </html>
