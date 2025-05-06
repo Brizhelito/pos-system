@@ -33,9 +33,7 @@ export async function POST(
 }
 
 // GET: Método no permitido
-export async function GET(
-  request: NextRequest
-): Promise<NextResponse<LogoutResponse>> {
+export async function GET(): Promise<NextResponse<LogoutResponse>> {
   return NextResponse.json(
     { message: "Method Not Allowed", code: "METHOD_NOT_ALLOWED" },
     { status: 405 }
@@ -43,9 +41,7 @@ export async function GET(
 }
 
 // PUT: Método no permitido
-export async function PUT(
-  request: NextRequest
-): Promise<NextResponse<LogoutResponse>> {
+export async function PUT(): Promise<NextResponse<LogoutResponse>> {
   return NextResponse.json(
     { message: "Method Not Allowed", code: "METHOD_NOT_ALLOWED" },
     { status: 405 }
@@ -53,9 +49,7 @@ export async function PUT(
 }
 
 // DELETE: Método no permitido
-export async function DELETE(
-  request: NextRequest
-): Promise<NextResponse<LogoutResponse>> {
+export async function DELETE(): Promise<NextResponse<LogoutResponse>> {
   return NextResponse.json(
     { message: "Method Not Allowed", code: "METHOD_NOT_ALLOWED" },
     { status: 405 }

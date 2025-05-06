@@ -4,45 +4,9 @@ import { sessionOptions } from "@/lib/auth/auth";
 import { handleError } from "@/lib/api/error";
 import { ProductService } from "@/services/ProductService";
 import { ProductCreateSchema } from "@/types/Products";
-import { z } from "zod";
 
 // Instancia del servicio de productos
 const productService = new ProductService();
-
-// Schema para validar los filtros
-const ProductFiltersSchema = z
-  .object({
-    name: z.string().optional(),
-    sku: z.string().optional(),
-    categoryId: z.string().optional(),
-    providerId: z.string().optional(),
-    minPrice: z.number().positive().optional(),
-    maxPrice: z.number().positive().optional(),
-    minStock: z.number().int().min(0).optional(),
-    maxStock: z.number().int().min(0).optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.minPrice && data.maxPrice) {
-        return data.minPrice <= data.maxPrice;
-      }
-      return true;
-    },
-    {
-      message: "El precio mínimo debe ser menor o igual al precio máximo",
-    }
-  )
-  .refine(
-    (data) => {
-      if (data.minStock && data.maxStock) {
-        return data.minStock <= data.maxStock;
-      }
-      return true;
-    },
-    {
-      message: "El stock mínimo debe ser menor o igual al stock máximo",
-    }
-  );
 
 // GET: Obtener todos los productos o buscar por término de búsqueda con soporte de paginación
 export async function GET(req: NextRequest) {
