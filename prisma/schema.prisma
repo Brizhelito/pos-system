@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -56,8 +56,8 @@ model product {
   provider      provider   @relation(fields: [providerId], references: [id], map: "product_provider_fkey")
   saleitem      saleitem[]
 
-  @@index([categoryId], map: "product_category_fkey")
-  @@index([providerId], map: "product_provider_fkey")
+  @@index([categoryId], map: "product_category_idx")
+  @@index([providerId], map: "product_provider_idx")
 }
 
 model provider {
@@ -83,8 +83,8 @@ model sale {
   user          user               @relation(fields: [userId], references: [id], map: "sale_user_fkey")
   saleitem      saleitem[]
 
-  @@index([customerId], map: "sale_customer_fkey")
-  @@index([userId], map: "sale_user_fkey")
+  @@index([customerId], map: "sale_customer_idx")
+  @@index([userId], map: "sale_user_idx")
 }
 
 model saleitem {
@@ -97,8 +97,8 @@ model saleitem {
   product   product @relation(fields: [productId], references: [id], map: "saleitem_product_fkey")
   sale      sale    @relation(fields: [saleId], references: [id], map: "saleitem_sale_fkey")
 
-  @@index([productId], map: "saleitem_product_fkey")
-  @@index([saleId], map: "saleitem_sale_fkey")
+  @@index([productId], map: "saleitem_product_idx")
+  @@index([saleId], map: "saleitem_sale_idx")
 }
 
 model user {
