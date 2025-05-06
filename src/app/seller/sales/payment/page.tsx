@@ -61,7 +61,7 @@ export default function PaymentMethodPage() {
         </div>
       </div>
       
-      <CompactPaymentMethod
+      <PaymentMethod
         selectedMethod={paymentMethod || $Enums.sale_paymentMethod.CASH}
         onSelectMethod={setPaymentMethod}
         totalAmount={totalAmount}

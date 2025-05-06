@@ -85,7 +85,7 @@ export default function ProductSelectionPage() {
         </div>
       </div>
       
-      <CompactProductSearch
+      <ProductSearch
         cartItems={cartItems}
         onAddToCart={handleAddToCart}
         onRemoveFromCart={removeFromCart}

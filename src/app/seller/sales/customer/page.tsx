@@ -6,6 +6,7 @@ import { useSalesContext } from "@/contexts/SalesContext";
 import { SalesStep } from "@/types/SalesFlow";
 import { SalesStepIndicator } from "@/components/features/sales/SalesStepIndicator";
 import { CompactCustomerSearch } from "@/components/features/sales/CompactCustomerSearch";
+import { CustomerSearch } from "@/components/features/sales";
 
 export default function CustomerSelectionPage() {
   const router = useRouter();
@@ -49,7 +50,7 @@ export default function CustomerSelectionPage() {
         </p>
       </div>
       
-      <CompactCustomerSearch
+      <CustomerSearch
         selectedCustomer={state.selectedCustomer}
         onSelectCustomer={handleSelectCustomer}
         onContinue={handleContinue}

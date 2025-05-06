@@ -64,7 +64,7 @@ export default function ConfirmationPage() {
         </p>
       </div>
       
-      <CompactSaleConfirmation 
+      <SaleConfirmation 
         customer={selectedCustomer!}
         items={cartItems}
         totalAmount={cartItems.reduce((total, item) => total + item.subtotal, 0)}
