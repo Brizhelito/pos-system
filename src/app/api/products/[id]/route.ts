@@ -7,7 +7,7 @@ import {
   updateProductHandler,
   deleteProductHandler,
 } from "@/services/ProductService";
-import { ProductUpdateSchema } from "@/types/Product";
+import { ProductUpdateSchema } from "@/types/Products";
 
 // GET: Obtener un producto específico por ID
 export async function GET(
