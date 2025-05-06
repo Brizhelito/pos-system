@@ -6,6 +6,7 @@ import { useSalesContext } from "@/contexts/SalesContext";
 import { SaleConfirmation } from "@/components/features/sales/SaleConfirmation";
 import { SalesStep } from "@/types/SalesFlow";
 import { SalesStepIndicator } from "@/components/features/sales/SalesStepIndicator";
+import { CompactSaleConfirmation } from "@/components/features/sales/CompactSaleConfirmation";
 
 export default function ConfirmationPage() {
   const router = useRouter();
@@ -63,7 +64,7 @@ export default function ConfirmationPage() {
         </p>
       </div>
       
-      <SaleConfirmation 
+      <CompactSaleConfirmation 
         customer={selectedCustomer!}
         items={cartItems}
         totalAmount={cartItems.reduce((total, item) => total + item.subtotal, 0)}

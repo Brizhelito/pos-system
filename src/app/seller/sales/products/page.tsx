@@ -7,6 +7,7 @@ import { ProductSearch } from "@/components/features/sales/ProductSearch";
 import { SalesStep } from "@/types/SalesFlow";
 import { SalesStepIndicator } from "@/components/features/sales/SalesStepIndicator";
 import { Product } from "@/types/Products";
+import { CompactProductSearch } from "@/components/features/sales/CompactProductSearch";
 
 export default function ProductSelectionPage() {
   const router = useRouter();
@@ -84,7 +85,7 @@ export default function ProductSelectionPage() {
         </div>
       </div>
       
-      <ProductSearch 
+      <CompactProductSearch
         cartItems={cartItems}
         onAddToCart={handleAddToCart}
         onRemoveFromCart={removeFromCart}

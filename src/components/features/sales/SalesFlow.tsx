@@ -5,10 +5,10 @@ import { SaleItem } from "@/types/Sale";
 import { Customer } from "@/types/Customer";
 import { Product } from "@/types/Products";
 import { $Enums } from "@prisma";
-import { CustomerSearch } from "./CustomerSearch";
-import { ProductSearch } from "./ProductSearch";
-import { PaymentMethod } from "./PaymentMethod";
-import { SaleConfirmation } from "./SaleConfirmation";
+import { CompactCustomerSearch } from "./CompactCustomerSearch";
+import { CompactProductSearch } from "./CompactProductSearch";
+import { CompactPaymentMethod } from "./CompactPaymentMethod";
+import { CompactSaleConfirmation } from "./CompactSaleConfirmation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -64,37 +64,39 @@ const stepsConfig = [
   }
 ];
 
+// Props for SalesFlow component
 interface SalesFlowProps {
-  userId: number;
-  onComplete?: (sale: Sale) => void;
-  onCancel?: () => void;
+  onCancel: () => void;
 }
 
-export function SalesFlow({ userId, onComplete, onCancel }: SalesFlowProps) {
-  // Usamos directamente el contexto sin sincronización local
-  const {
-    state,
-    setCurrentStep,
+export default function SalesFlow({ onCancel }: SalesFlowProps) {
+  const router = useRouter();
+  
+  const { 
+    state, 
+    addToCart, 
+    removeFromCart, 
+    updateCartItem, 
+    setCurrentStep, 
+    resetSale,
     setSelectedCustomer,
-    addToCart,
-    updateCartItem,
-    removeFromCart,
-    clearCart,
-    setPaymentMethod,
-    completeSale,
-    resetSale
+    setPaymentMethod
   } = useSalesContext();
   
-  // Extraemos los valores del estado para facilitar su uso
-  const { currentStep, selectedCustomer, cartItems, paymentMethod } = state;
-  
+  // Destructure state for easier access
+  const { 
+    currentStep, 
+    selectedCustomer, 
+    cartItems, 
+    paymentMethod
+  } = state;
+
   // Estados locales solo para la UI que no necesitan persistencia
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
   const [confirmMessage, setConfirmMessage] = useState("");
   const [confirmTitle, setConfirmTitle] = useState("");
-  const router = useRouter();
 
   // Calculate total amount
   const totalAmount = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
@@ -223,84 +225,79 @@ export function SalesFlow({ userId, onComplete, onCancel }: SalesFlowProps) {
     toast.success("Producto eliminado del carrito");
   };
 
-  // Handle updating product quantity in cart
-  const handleUpdateQuantity = (productId: number, quantity: number) => {
-    if (quantity <= 0) {
-      handleRemoveFromCart(productId);
-      return;
-    }
+  // Handle updating quantity of items in cart
+  const handleUpdateQuantity = (updatedItem: SaleItem) => {
+    // Ensure the item exists in the cart
+    const existingItem = cartItems.find(item => item.productId === updatedItem.productId);
     
-    // Encontrar el item y actualizarlo
-    const existingItem = cartItems.find(item => item.productId === productId);
     if (existingItem) {
-      const updatedItem = {
+      const { productId, quantity } = updatedItem;
+      const newItem = {
         ...existingItem,
         quantity,
         subtotal: quantity * existingItem.unitPrice
       };
-      updateCartItem(updatedItem);
+      updateCartItem(newItem);
     }
   };
 
-  // Create the sale
-  const handleCreateSale = () => {
+  // Create a new sale
+  const handleCreateSale = async () => {
     if (!selectedCustomer) {
-      toast.error("Debe seleccionar un cliente");
+      toast.error("Debes seleccionar un cliente");
       return;
     }
-
+    
     if (cartItems.length === 0) {
-      toast.error("Debe agregar al menos un producto");
+      toast.error("No hay productos en el carrito");
       return;
     }
-
+    
     if (!paymentMethod) {
-      toast.error("Debe seleccionar un método de pago");
+      toast.error("Debes seleccionar un método de pago");
       return;
     }
-
+    
     setIsLoading(true);
-
+    
     // Prepare sale data
     const saleData: SaleCreate = {
       customerId: selectedCustomer.id,
-      userId,
+      userId: 1, // TODO: obtener el ID del usuario actual
       items: cartItems.map(item => ({
         productId: item.productId,
         quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        subtotal: item.subtotal
+        unitPrice: item.unitPrice
       })),
-      paymentMethod: paymentMethod,
-      totalAmount: totalAmount,
+      paymentMethod,
+      totalAmount,
+      paymentReference: "",
+      paymentAmount: totalAmount,
+      changeAmount: 0
     };
-
+    
     // Simulate API call
     setTimeout(() => {
-      // Simulate created sale with ID
+      // Simulated created sale
       const createdSale: Sale = {
-        id: Math.floor(Math.random() * 10000),
+        id: Date.now(), // Just a placeholder
         ...saleData,
         createdAt: new Date(),
         updatedAt: new Date(),
-        status: $Enums.sale_status.COMPLETED
+        status: "COMPLETED"
       };
-
+      
+      toast.success("Venta completada exitosamente");
       setIsLoading(false);
       setCurrentStep(SalesStep.COMPLETED);
-      
-      if (onComplete) {
-        onComplete(createdSale);
-      }
       
       // Auto reset after showing completion screen
       setTimeout(() => {
         handleReset();
-      }, 5000);
+        router.push("/seller/sales?completed=true");
+      }, 3000);
       
-      // Show success toast
-      toast.success("Venta completada exitosamente");
-    }, 2000);
+    }, 1500); // Simulated API delay
   };
 
   // Reset the flow
@@ -313,49 +310,61 @@ export function SalesFlow({ userId, onComplete, onCancel }: SalesFlowProps) {
     switch (currentStep) {
       case SalesStep.CUSTOMER_SEARCH:
         return (
-          <CustomerSearch 
+          <CompactCustomerSearch
             selectedCustomer={selectedCustomer}
             onSelectCustomer={setSelectedCustomer}
+            onContinue={handleNextStep}
+            onBack={onCancel}
           />
         );
       case SalesStep.PRODUCT_SEARCH:
         return (
-          <ProductSearch
-            onAddToCart={handleAddToCart}
+          <CompactProductSearch
             cartItems={cartItems}
+            onAddToCart={handleAddToCart}
             onRemoveFromCart={handleRemoveFromCart}
             onUpdateQuantity={handleUpdateQuantity}
-            totalAmount={totalAmount || 0}
+            totalAmount={totalAmount}
+            onContinue={handleNextStep}
+            onBack={handlePreviousStep}
           />
         );
       case SalesStep.PAYMENT_METHOD:
         return (
-          <PaymentMethod 
+          <CompactPaymentMethod
             selectedMethod={paymentMethod}
             onSelectMethod={setPaymentMethod}
             totalAmount={totalAmount}
+            onContinue={handleNextStep}
+            onBack={handlePreviousStep}
           />
         );
       case SalesStep.CONFIRMATION:
         return (
-          <SaleConfirmation 
+          <CompactSaleConfirmation
             customer={selectedCustomer!}
             items={cartItems}
-            paymentMethod={paymentMethod}
             totalAmount={totalAmount}
+            paymentMethod={paymentMethod}
+            onConfirm={handleCreateSale}
+            onBack={handlePreviousStep}
           />
         );
       case SalesStep.COMPLETED:
         return (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="bg-green-100 dark:bg-green-900 rounded-full p-5 mb-4">
-              <svg className="h-16 w-16 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <div className="flex flex-col items-center justify-center p-4 text-center">
+            <div className="bg-green-100 dark:bg-green-900 rounded-full p-4 mb-3">
+              <svg className="h-10 w-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold mb-2">¡Venta Completada!</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">La venta ha sido procesada exitosamente.</p>
-            <Button onClick={handleReset}>Realizar Nueva Venta</Button>
+            <h1 className="text-xl font-bold mb-2">¡Venta completada!</h1>
+            <p className="text-sm text-muted-foreground mb-4">
+              La venta ha sido registrada exitosamente.
+            </p>
+            <Button onClick={handleReset} className="w-full max-w-xs">
+              Realizar nueva venta
+            </Button>
           </div>
         );
     }
@@ -378,157 +387,89 @@ export function SalesFlow({ userId, onComplete, onCancel }: SalesFlowProps) {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-2 md:py-6">
-      {/* Progress bar */}
-      {currentStep < SalesStep.COMPLETED && (
-        <motion.div 
-          className="mb-6 md:mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="hidden sm:flex justify-between mb-4">
-            {stepsConfig.map((step, index) => (
-              <div 
-                key={index} 
-                className="relative flex flex-col items-center"
-              >
-                <div 
-                  className={`
-                    flex items-center justify-center w-10 h-10 rounded-full 
-                    ${index <= currentStep 
-                      ? `bg-gradient-to-r ${step.color} text-white shadow-lg` 
-                      : 'bg-gray-100 text-gray-400 dark:bg-gray-800'} 
-                    transition-all duration-300 ease-in-out z-10
-                  `}
-                >
-                  <span className="text-lg">{step.icon}</span>
-                </div>
-                <div 
-                  className={`mt-2 text-xs font-medium transition-colors duration-300
-                    ${index <= currentStep ? 'text-primary' : 'text-gray-400'}`}
-                >
-                  {step.label}
-                </div>
+    <div className="h-full flex flex-col bg-background">
+      {/* Encabezado del flujo de ventas con pasos */}
+      <div className="bg-white dark:bg-gray-950 border-b shadow-sm">
+        <div className="container mx-auto px-4 py-3">
+          {/* Barra de progreso compacta horizontal */}
+          <div className="flex items-center justify-between max-w-3xl mx-auto">
+            {Object.values(SalesStep).filter(step => typeof step === 'number').map((step, index) => {
+              const stepNumber = step as number;
+              // Solo mostrar hasta CONFIRMATION (evitamos COMPLETED)
+              if (stepNumber <= SalesStep.CONFIRMATION) {
+                const isActive = currentStep === stepNumber;
+                const isCompleted = currentStep > stepNumber;
                 
-                {/* Connecting line */}
-                {index < stepsConfig.length - 1 && (
-                  <div className="absolute top-5 left-10 w-full h-0.5 bg-gray-200 dark:bg-gray-700 -z-0">
-                    <motion.div 
-                      className="h-full bg-primary"
-                      initial={{ width: "0%" }}
-                      animate={{ width: index < currentStep ? "100%" : "0%" }}
-                      transition={{ duration: 0.5 }}
-                    />
+                return (
+                  <div key={stepNumber} className="flex flex-1 items-center">
+                    {/* Circle with number */}
+                    <div 
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
+                        ${isActive ? 'bg-primary text-primary-foreground' : 
+                          isCompleted ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}
+                    >
+                      {isCompleted ? '✓' : stepNumber + 1}
+                    </div>
+                    
+                    {/* Step label */}
+                    <span className={`text-xs ml-1 hidden lg:inline
+                      ${isActive ? 'text-primary font-medium' : 
+                        isCompleted ? 'text-primary/70' : 'text-muted-foreground'}`}>
+                      {[
+                        "Cliente",
+                        "Productos",
+                        "Pago",
+                        "Confirmación"
+                      ][stepNumber]}
+                    </span>
+                    
+                    {/* Connector line */}
+                    {stepNumber < SalesStep.CONFIRMATION && (
+                      <div className="flex-1 h-px mx-2 bg-border" />
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                );
+              }
+              return null;
+            })}            
           </div>
-          
-          {/* Texto para móviles que muestra solo la etapa actual */}
-          <div className="sm:hidden text-center mb-4">
-            <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full">
-              <div className={`
-                flex items-center justify-center w-6 h-6 rounded-full 
-                bg-gradient-to-r ${stepsConfig[currentStep].color} text-white text-xs
-              `}>
-                {currentStep + 1}
-              </div>
-              <div className="text-sm font-medium text-primary">
-                {stepsConfig[currentStep].title}
-              </div>
-            </div>
-          </div>
-          
-          <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-            <motion.div 
-              className={`bg-gradient-to-r ${stepsConfig[currentStep].color} h-2.5 rounded-full`}
-              initial={{ width: "0%" }}
-              animate={{ width: `${(Number(currentStep) / 3) * 100}%` }}
-              transition={{ duration: 0.5 }}
-            />
-          </div>
-        </motion.div>
+        </div>
+      </div>
+      
+      {/* Contenedor principal con contenido del paso */}
+      <div className="flex-1 overflow-auto p-4">
+        <div className="container mx-auto h-full flex flex-col max-w-3xl">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              variants={pageVariants}
+              className="flex-1 min-h-[40vh] max-h-[60vh] overflow-auto"
+            >
+              {renderStep()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+      
+      {/* Atajos de teclado compactos al fondo */}
+      {currentStep < SalesStep.COMPLETED && (
+        <div className="border-t py-1 px-2 bg-muted/10 flex flex-wrap gap-1 justify-center">
+          <kbd className="px-1 py-0.5 text-[10px] bg-muted rounded">Esc: Atrás</kbd>
+          <kbd className="px-1 py-0.5 text-[10px] bg-muted rounded">Enter: Continuar</kbd>
+          <kbd className="px-1 py-0.5 text-[10px] bg-muted rounded">Alt+F: Buscar</kbd>
+          <kbd className="px-1 py-0.5 text-[10px] bg-muted rounded">Alt+A: Agregar</kbd>
+          <kbd className="px-1 py-0.5 text-[10px] bg-muted rounded">Alt+C: Confirmar</kbd>
+        </div>
       )}
-
-      {/* Main content */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-        <Card className="w-full bg-card shadow-xl overflow-hidden rounded-xl border-0">
-          <CardContent className="p-0">
-            <div className={`bg-gradient-to-r ${currentStep < SalesStep.COMPLETED ? stepsConfig[currentStep].color : "from-green-600 to-emerald-600"} text-white p-3 sm:p-4`}>
-              <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
-                {currentStep < SalesStep.COMPLETED && (
-                  <span className="text-xl">{stepsConfig[currentStep].icon}</span>
-                )}
-                {getStepTitle()}
-              </h2>
-            </div>
-            
-            <div className="p-3 sm:p-6 min-h-[60vh] max-h-[70vh] md:max-h-none overflow-y-auto">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentStep}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  variants={pageVariants}
-                  transition={{ type: "tween", duration: 0.3 }}
-                  className="h-full"
-                >
-                  {renderStep()}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-            
-            {/* Navigation buttons */}
-            {currentStep < SalesStep.COMPLETED && (
-              <motion.div 
-                className="p-4 border-t flex justify-between items-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Button 
-                  variant="outline" 
-                  onClick={handlePreviousStep}
-                  disabled={isLoading}
-                  size="sm"
-                  className="sm:size-default transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  {currentStep === SalesStep.CUSTOMER_SEARCH ? "Cancelar" : "Anterior"}
-                </Button>
-                
-                <div className="hidden sm:block text-xs text-muted-foreground">
-                  Paso {currentStep + 1} de {stepsConfig.length}
-                </div>
-                
-                <Button 
-                  onClick={handleNextStep}
-                  disabled={isLoading}
-                  size="sm"
-                  className={`sm:size-default transition-all duration-300 bg-gradient-to-r ${stepsConfig[currentStep].color} hover:opacity-90`}
-                >
-                  {currentStep === SalesStep.CONFIRMATION ? "Finalizar Venta" : "Continuar"}
-                </Button>
-              </motion.div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
 
       {/* Confirmation dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent className="max-w-md rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl flex items-center gap-2">
-              {currentStep < SalesStep.COMPLETED && (
-                <span className="text-xl">{stepsConfig[currentStep].icon}</span>
-              )}
               {confirmTitle}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base">
@@ -538,7 +479,7 @@ export function SalesFlow({ userId, onComplete, onCancel }: SalesFlowProps) {
           <AlertDialogFooter className="gap-2">
             <AlertDialogCancel className="rounded-full">Cancelar</AlertDialogCancel>
             <AlertDialogAction 
-              className={`rounded-full bg-gradient-to-r ${currentStep < SalesStep.COMPLETED ? stepsConfig[currentStep].color : "from-green-600 to-emerald-600"}`}
+              className="rounded-full bg-primary"
               onClick={() => {
                 confirmAction();
                 setShowConfirmDialog(false);

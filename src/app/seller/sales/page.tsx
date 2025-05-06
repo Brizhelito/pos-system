@@ -69,20 +69,20 @@ export default function SellerSalesPage() {
   // Iniciar nuevo flujo de venta
   const startNewSale = () => {
     resetSale();
-    router.push("/seller/sales/customer");
+    router.push(`/seller/sales/customer?compact=true`);
   };
   
   // Continuar venta en progreso
   const continueSale = () => {
     // Determinar el paso al que debemos ir
     if (!state.selectedCustomer) {
-      router.push("/seller/sales/customer");
+      router.push(`/seller/sales/customer?compact=true`);
     } else if (state.selectedCustomer && state.cartItems.length === 0) {
-      router.push("/seller/sales/products");
+      router.push(`/seller/sales/products?compact=true`);
     } else if (state.selectedCustomer && state.cartItems.length > 0 && !state.paymentMethod) {
-      router.push("/seller/sales/payment");
+      router.push(`/seller/sales/payment?compact=true`);
     } else {
-      router.push("/seller/sales/confirmation");
+      router.push(`/seller/sales/confirmation?compact=true`);
     }
   };
   

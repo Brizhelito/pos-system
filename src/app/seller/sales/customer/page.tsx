@@ -3,9 +3,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSalesContext } from "@/contexts/SalesContext";
-import { CustomerSearch } from "@/components/features/sales/CustomerSearch";
 import { SalesStep } from "@/types/SalesFlow";
 import { SalesStepIndicator } from "@/components/features/sales/SalesStepIndicator";
+import { CompactCustomerSearch } from "@/components/features/sales/CompactCustomerSearch";
 
 export default function CustomerSelectionPage() {
   const router = useRouter();
@@ -49,7 +49,7 @@ export default function CustomerSelectionPage() {
         </p>
       </div>
       
-      <CustomerSearch 
+      <CompactCustomerSearch
         selectedCustomer={state.selectedCustomer}
         onSelectCustomer={handleSelectCustomer}
         onContinue={handleContinue}

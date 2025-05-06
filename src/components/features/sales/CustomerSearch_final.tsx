@@ -8,14 +8,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { CustomerCreateSchema } from "@/types/Customer";
 import { toast } from "sonner";
-import { useHotkeys } from "react-hotkeys-hook";
 import { 
   Loader2, Search, UserPlus, Edit, ChevronLeft, 
-  ArrowRight, User, AlertCircle, Check, AlertTriangle,
-  Command
+  ArrowRight, User, AlertCircle, Check, AlertTriangle
 } from "lucide-react";  
 import { 
   AlertDialog,
@@ -48,10 +45,9 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [showCustomerFoundDialog, setShowCustomerFoundDialog] = useState(false);
-  const [foundCustomer, setFoundCustomer] = useState<Customer | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notFoundMessage, setNotFoundMessage] = useState("");
+  const [showFrequentCustomers, setShowFrequentCustomers] = useState(true);
   
   // Referencias para navegación
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -142,23 +138,8 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
   const searchCustomerByCedula = (cedula: string): Customer | null => {
     if (!customers || !cedula) return null;
     
-    const searchTerm = cedula.trim();
-    
-    // Buscar coincidencia exacta primero
-    let found = customers.find(c => c.cedula === searchTerm);
-    
-    // Si no se encuentra, buscar coincidencia sin importar prefijo
-    if (!found) {
-      // Si el input es un número, buscamos cualquier cédula que termine con ese número
-      if (/^\d+$/.test(searchTerm)) {
-        found = customers.find(c => {
-          if (!c.cedula) return false;
-          // Extraer solo los números de la cédula almacenada
-          const numbers = c.cedula.replace(/[^0-9]/g, '');
-          return numbers === searchTerm;
-        });
-      }
-    }
+    const normalized = formatCedula(cedula.trim());
+    const found = customers.find(c => c.cedula === normalized);
     
     return found || null;
   };
@@ -173,9 +154,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
     const customer = searchCustomerByCedula(searchQuery);
     
     if (customer) {
-      // En lugar de seleccionar automáticamente, mostrar diálogo de confirmación
-      setFoundCustomer(customer);
-      setShowCustomerFoundDialog(true);
+      onSelectCustomer(customer);
       setNotFoundMessage("");
     } else {
       setNotFoundMessage(`No se encontró cliente con cédula ${searchQuery}`);
@@ -196,15 +175,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
   
   // Abrir diálogo para crear cliente desde la búsqueda
   const createCustomerFromSearch = () => {
-    // Si se ingresó solo un número, añadir el prefijo V- por defecto
-    let formattedCedula = searchQuery;
-    if (/^\d+$/.test(searchQuery)) {
-      formattedCedula = `V-${searchQuery}`;
-    } else {
-      formattedCedula = formatCedula(searchQuery);
-    }
-    
-    createForm.setValue("cedula", formattedCedula);
+    createForm.setValue("cedula", formatCedula(searchQuery));
     setShowCreateDialog(true);
     setShowConfirmDialog(false); // Cerrar el diálogo de confirmación
   };
@@ -302,45 +273,6 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
       searchInputRef.current.focus();
     }
   };
-  
-  // Confirmar selección de cliente
-  const confirmCustomerSelection = () => {
-    if (foundCustomer) {
-      onSelectCustomer(foundCustomer);
-      setShowCustomerFoundDialog(false);
-    }
-  };
-  
-  // Cancelar selección de cliente
-  const cancelCustomerSelection = () => {
-    setShowCustomerFoundDialog(false);
-    setFoundCustomer(null);
-    onSelectCustomer(null);
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  };
-  
-  // Atajos de teclado para todo el componente
-  useHotkeys('alt+f', () => {
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, { enableOnFormTags: ['INPUT'] }, [searchInputRef]);
-  
-  // Atajo para confirmar la selección del cliente cuando el diálogo está abierto
-  useHotkeys('enter', () => {
-    if (showCustomerFoundDialog && foundCustomer) {
-      confirmCustomerSelection();
-    }
-  }, { enabled: showCustomerFoundDialog }, [showCustomerFoundDialog, foundCustomer]);
-  
-  // Atajo para crear un nuevo cliente desde el diálogo de confirmación
-  useHotkeys('alt+c', () => {
-    if (showConfirmDialog) {
-      createCustomerFromSearch();
-    }
-  }, { enabled: showConfirmDialog }, [showConfirmDialog]);
   
   // Efecto para auto-enfocar el campo de búsqueda al montar
   useEffect(() => {
@@ -478,69 +410,27 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
             </div>
           )}
         </CardContent>
-        <CardFooter className="flex flex-col border-t pt-4">
-          {/* Guía de atajos de teclado */}
-          <div className="w-full p-3 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-700 mb-4">
-            <h3 className="font-medium text-slate-900 mb-2 flex items-center">
-              <Command className="w-4 h-4 mr-2" />
-              Atajos de teclado
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center">
-                <kbd className="px-2 py-1 bg-white rounded border border-slate-300 mr-2 text-xs">Alt + F</kbd>
-                <span>Enfocar búsqueda</span>
-              </div>
-              <div className="flex items-center">
-                <kbd className="px-2 py-1 bg-white rounded border border-slate-300 mr-2 text-xs">Enter</kbd>
-                <span>Buscar / Confirmar</span>
-              </div>
-              <div className="flex items-center">
-                <kbd className="px-2 py-1 bg-white rounded border border-slate-300 mr-2 text-xs">Alt + C</kbd>
-                <span>Crear cliente</span>
-              </div>
-              <div className="flex items-center">
-                <kbd className="px-2 py-1 bg-white rounded border border-slate-300 mr-2 text-xs">Esc</kbd>
-                <span>Cancelar / Volver</span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Botones de navegación */}
-          <div className="flex w-full justify-between">
-            {onBack && (
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={onBack}
-              >
-                <ChevronLeft size={16} className="mr-2" />
-                Volver
-              </Button>
-            )}
+        <CardFooter className="flex justify-between border-t pt-4">
+          {onBack && (
+            <Button
+              variant="outline"
+              onClick={onBack}
+            >
+              <ChevronLeft size={16} className="mr-2" />
+              Atrás
+            </Button>
+          )}
 
-            {!selectedCustomer && onContinue && (
-              <Button
-                type="button"
-                disabled
-                className="opacity-50 ml-auto"
-                onClick={onContinue}
-              >
-                Continuar
-                <ArrowRight size={16} className="ml-2" />
-              </Button>
-            )}
-            
-            {selectedCustomer && onContinue && (
-              <Button
-                type="button"
-                className="ml-auto"
-                onClick={onContinue}
-              >
-                Continuar con {selectedCustomer.name.split(' ')[0]}
-                <ArrowRight size={16} className="ml-2" />
-              </Button>
-            )}
-          </div>
+          {!selectedCustomer && onContinue && (
+            <Button
+              onClick={onContinue}
+              disabled={!selectedCustomer}
+              className="ml-auto"
+            >
+              Continuar
+              <ArrowRight size={16} className="ml-2" />
+            </Button>
+          )}
         </CardFooter>
       </Card>
 
@@ -559,40 +449,6 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
             <AlertDialogAction onClick={createCustomerFromSearch}>
               <UserPlus size={16} className="mr-2" />
               Crear cliente
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      
-      {/* Diálogo de confirmación cuando se encuentra un cliente */}
-      <AlertDialog open={showCustomerFoundDialog} onOpenChange={setShowCustomerFoundDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Cliente encontrado</AlertDialogTitle>
-            <AlertDialogDescription>
-              Se encontró el siguiente cliente con la cédula <span className="font-medium">{searchQuery}</span>
-            </AlertDialogDescription>
-            
-            {foundCustomer && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
-                <div className="font-medium text-green-900">{foundCustomer.name}</div>
-                <div className="text-sm space-y-1 text-slate-700 mt-1">
-                  <div><span className="font-medium">Cédula:</span> {foundCustomer.cedula || "No especificada"}</div>
-                  <div><span className="font-medium">Teléfono:</span> {foundCustomer.phone || "No especificado"}</div>
-                  <div><span className="font-medium">Email:</span> {foundCustomer.email || "No especificado"}</div>
-                </div>
-              </div>
-            )}
-            
-            <div className="mt-4 text-sm text-muted-foreground">
-              ¿Desea seleccionar este cliente para la compra?
-            </div>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelCustomerSelection}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmCustomerSelection}>
-              <Check size={16} className="mr-2" />
-              Seleccionar cliente
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -616,209 +472,132 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nombre completo</FormLabel>
-                    <FormControl>
-                      <Input 
-                        autoFocus 
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
                 )}
-              />
-              
-              <FormField
-                control={createForm.control}
-                name="cedula"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cédula</FormLabel>
-                    <FormControl>
-                      <Input 
-                        value={field.value || ""}
-                        onChange={(e) => {
-                          handleCedulaChange(e, createForm);
-                          field.onChange(e);
-                        }}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={createForm.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Teléfono</FormLabel>
-                    <FormControl>
-                      <Input 
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={createForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="email"
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Guardando
-                    </>
-                  ) : (
-                    "Guardar"
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
 
-      {/* Diálogo para editar cliente */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar cliente</DialogTitle>
-            <DialogDescription>
-              Actualiza la información del cliente.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(handleEditCustomer)} className="space-y-4">
-              <FormField
-                control={editForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre completo</FormLabel>
-                    <FormControl>
-                      <Input 
-                        autoFocus 
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+    {/* Diálogo para editar cliente */}
+    <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar cliente</DialogTitle>
+          <DialogDescription>
+            Actualiza la información del cliente.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <Form {...editForm}>
+          <form onSubmit={editForm.handleSubmit(handleEditCustomer)} className="space-y-4">
+            <FormField
+              control={editForm.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre completo</FormLabel>
+                  <FormControl>
+                    <Input 
+                      autoFocus 
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={editForm.control}
+              name="cedula"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cédula</FormLabel>
+                  <FormControl>
+                    <Input 
+                      value={field.value || ""}
+                      onChange={(e) => {
+                        handleCedulaChange(e, editForm);
+                        field.onChange(e);
+                      }}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={editForm.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Teléfono</FormLabel>
+                  <FormControl>
+                    <Input 
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={editForm.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="email"
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Actualizando
+                  </>
+                ) : (
+                  "Actualizar"
                 )}
-              />
-              
-              <FormField
-                control={editForm.control}
-                name="cedula"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cédula</FormLabel>
-                    <FormControl>
-                      <Input 
-                        value={field.value || ""}
-                        onChange={(e) => {
-                          handleCedulaChange(e, editForm);
-                          field.onChange(e);
-                        }}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={editForm.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Teléfono</FormLabel>
-                    <FormControl>
-                      <Input 
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={editForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="email"
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  </motion.div>
+);
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Actualizando
                     </>
