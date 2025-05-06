@@ -42,25 +42,9 @@ export async function POST(
     // with instructions to clear the session cookie in the browser.
     return response;
   } catch (error) {
-    // --- Centralized Error Handling ---
-    console.error("An error occurred in Logout Route:", error);
-
-    // Pass ANY caught error to your handleError function
-    const apiErrorResponse = handleError(error);
-
-    // Use the result from handleError to construct the NextResponse for the error response
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-        // Optionally, include other fields from apiErrorResponse
-        // details: apiErrorResponse.details,
-      },
-      { status: apiErrorResponse.statusCode } // Use the status code from handleError
-    );
+    return handleError(error);
   }
 }
-
 // You might want to disallow other HTTP methods
 export async function GET() {
   return NextResponse.json(

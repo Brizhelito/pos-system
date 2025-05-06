@@ -45,15 +45,7 @@ export async function GET(
     
     return NextResponse.json(category);
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }
 
@@ -71,7 +63,7 @@ export async function PUT(
     );
 
     // Verificar que el usuario esté autenticado y tenga permisos de administrador
-    if (!session.user || session.user.role !== 'ADMIN') {
+    if (!session.user || session.user.role !== "ADMIN") {
       return NextResponse.json(
         { message: "No autorizado para actualizar categorías" },
         { status: 403 }
@@ -80,7 +72,7 @@ export async function PUT(
 
     // Obtener ID de la categoría de los parámetros de ruta
     const categoryId = parseInt(params.id, 10);
-    
+
     if (isNaN(categoryId)) {
       return NextResponse.json(
         { message: "ID de categoría inválido", code: "INVALID_CATEGORY_ID" },
@@ -90,33 +82,24 @@ export async function PUT(
 
     // Obtener datos del cuerpo de la solicitud
     const body = await req.json();
-    
+
     // Combinar ID de ruta con los datos del cuerpo
     const updateData = {
       ...body,
       id: categoryId, // Asegurar que el ID coincida con la ruta
     };
-    
+
     // Validar datos con Zod schema
     const validatedData = CategoryUpdateSchema.parse(updateData);
-    
+
     // Actualizar categoría usando el servicio
     const updatedCategory = await updateCategoryHandler(validatedData);
-    
+
     return NextResponse.json(updatedCategory);
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }
-
 // DELETE: Eliminar una categoría existente
 export async function DELETE(
   req: NextRequest,
@@ -131,7 +114,7 @@ export async function DELETE(
     );
 
     // Verificar que el usuario esté autenticado y tenga permisos de administrador
-    if (!session.user || session.user.role !== 'ADMIN') {
+    if (!session.user || session.user.role !== "ADMIN") {
       return NextResponse.json(
         { message: "No autorizado para eliminar categorías" },
         { status: 403 }
@@ -140,7 +123,7 @@ export async function DELETE(
 
     // Obtener ID de la categoría de los parámetros de ruta
     const categoryId = parseInt(params.id, 10);
-    
+
     if (isNaN(categoryId)) {
       return NextResponse.json(
         { message: "ID de categoría inválido", code: "INVALID_CATEGORY_ID" },
@@ -150,22 +133,12 @@ export async function DELETE(
 
     // Eliminar categoría usando el servicio
     const deletedCategory = await deleteCategoryHandler(categoryId);
-    
-    return NextResponse.json(
-      { 
-        message: "Categoría eliminada correctamente",
-        category: deletedCategory 
-      }
-    );
+
+    return NextResponse.json({
+      message: "Categoría eliminada correctamente",
+      category: deletedCategory,
+    });
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }

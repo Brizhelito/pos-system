@@ -20,10 +20,7 @@ export async function GET(req: NextRequest) {
 
     // Verificar que el usuario esté autenticado
     if (!session.user) {
-      return NextResponse.json(
-        { message: "No autorizado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     // Obtener todas las categorías
@@ -31,19 +28,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(categories);
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    handleError(error);
+    return handleError(error);
   }
 }
-
-// POST: Crear una nueva categoría
 export async function POST(req: NextRequest) {
   try {
     // Verificar autenticación
@@ -54,7 +42,7 @@ export async function POST(req: NextRequest) {
     );
 
     // Verificar que el usuario esté autenticado y tenga permisos de administrador
-    if (!session.user || session.user.role !== 'ADMIN') {
+    if (!session.user || session.user.role !== "ADMIN") {
       return NextResponse.json(
         { message: "No autorizado para crear categorías" },
         { status: 403 }
@@ -63,23 +51,15 @@ export async function POST(req: NextRequest) {
 
     // Obtener datos del cuerpo de la solicitud
     const body = await req.json();
-    
+
     // Validar datos con Zod schema
     const validatedData = CategoryCreateSchema.parse(body);
-    
+
     // Crear categoría usando el servicio
     const newCategory = await createCategoryHandler(validatedData);
-    
+
     return NextResponse.json(newCategory, { status: 201 });
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }
