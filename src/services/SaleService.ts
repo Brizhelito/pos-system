@@ -4,6 +4,7 @@ import {
   SaleCreate,
   SaleUpdateSchema,
   SaleUpdate,
+  SaleItem,
 } from "../types/Sale";
 import { prisma } from "../components/config/db";
 import { APIError } from "../lib/api/error";
@@ -46,7 +47,7 @@ export class SaleService {
 
       // Verificar que el cliente existe
       const customer = await prisma.customer.findUnique({
-        where: { id: validatedData.customerId },
+        where: { id: validatedData.customerId as number },
       });
 
       if (!customer) {
@@ -54,7 +55,9 @@ export class SaleService {
       }
 
       // Verificar que todos los productos existen y tienen suficiente stock
-      const productIds = validatedData.items.map((item) => item.productId);
+      const productIds = (validatedData.items as SaleItem[]).map(
+        (item: SaleItem) => item.productId
+      );
       const products = await prisma.product.findMany({
         where: { id: { in: productIds } },
       });
@@ -69,7 +72,7 @@ export class SaleService {
 
       // Verificar stock y calcular total
       let totalAmount = 0;
-      for (const item of validatedData.items) {
+      for (const item of validatedData.items as SaleItem[]) {
         const product = products.find((p) => p.id === item.productId);
         if (!product) continue;
 
@@ -89,19 +92,22 @@ export class SaleService {
         // Crear la venta
         const sale = await tx.sale.create({
           data: {
-            customerId: validatedData.customerId,
-            userId: validatedData.userId,
-            paymentMethod: validatedData.paymentMethod,
-            status: "PENDING" as const,
+            customerId: validatedData.customerId as number,
+            userId: validatedData.userId as number,
+            paymentMethod:
+              validatedData.paymentMethod as $Enums.sale_paymentMethod,
+            status: "PENDING" as $Enums.sale_status,
             saleDate: new Date(),
             totalAmount,
+            createdAt: new Date(),
+            updatedAt: new Date(),
           },
         });
 
         // Crear los items de la venta
         const saleItems = await Promise.all(
-          validatedData.items.map((item) =>
-            tx.saleItem.create({
+          (validatedData.items as SaleItem[]).map((item: SaleItem) =>
+            tx.saleitem.create({
               data: {
                 saleId: sale.id,
                 productId: item.productId,
@@ -115,7 +121,7 @@ export class SaleService {
 
         // Actualizar el stock de los productos
         await Promise.all(
-          validatedData.items.map((item) =>
+          (validatedData.items as SaleItem[]).map((item: SaleItem) =>
             tx.product.update({
               where: { id: item.productId },
               data: {
@@ -148,7 +154,7 @@ export class SaleService {
     try {
       const sales = await prisma.sale.findMany({
         include: {
-          saleItems: true,
+          saleitem: true,
           customer: true,
           user: true,
         },
@@ -176,7 +182,7 @@ export class SaleService {
       const sale = await prisma.sale.findUnique({
         where: { id },
         include: {
-          saleItems: true,
+          saleitem: true,
           customer: true,
           user: true,
         },
@@ -210,7 +216,7 @@ export class SaleService {
       // Verificar que la venta existe
       const existingSale = await prisma.sale.findUnique({
         where: { id: data.id },
-        include: { saleItems: true },
+        include: { saleitem: true },
       });
 
       if (!existingSale) {
@@ -218,7 +224,7 @@ export class SaleService {
       }
 
       // Verificar que la venta no esté completada o cancelada
-      if (existingSale.status !== $Enums.SaleStatus.PENDING) {
+      if (existingSale.status !== $Enums.sale_status.PENDING) {
         throw new APIError(
           "No se puede actualizar una venta completada o cancelada",
           400,
@@ -228,7 +234,9 @@ export class SaleService {
 
       // Si se están actualizando los items, verificar stock
       if (validatedData.items) {
-        const productIds = validatedData.items.map((item) => item.productId);
+        const productIds = (validatedData.items as SaleItem[]).map(
+          (item: SaleItem) => item.productId
+        );
         const products = await prisma.product.findMany({
           where: { id: { in: productIds } },
         });
@@ -242,12 +250,12 @@ export class SaleService {
         }
 
         // Verificar stock para cada producto
-        for (const item of validatedData.items) {
+        for (const item of validatedData.items as SaleItem[]) {
           const product = products.find((p) => p.id === item.productId);
           if (!product) continue;
 
-          const existingItem = existingSale.saleItems.find(
-            (si) => si.productId === item.productId
+          const existingItem = (existingSale.saleitem as SaleItem[]).find(
+            (si: SaleItem) => si.productId === item.productId
           );
           const quantityChange = existingItem
             ? item.quantity - existingItem.quantity
@@ -265,7 +273,10 @@ export class SaleService {
 
       // Calcular el total de la venta si hay items
       const totalAmount = validatedData.items
-        ? validatedData.items.reduce((sum, item) => sum + item.subtotal, 0)
+        ? (validatedData.items as SaleItem[]).reduce(
+            (sum: number, item: SaleItem) => sum + item.subtotal,
+            0
+          )
         : undefined;
 
       // Actualizar venta en una transacción
@@ -274,24 +285,26 @@ export class SaleService {
         const sale = await tx.sale.update({
           where: { id: data.id },
           data: {
-            customerId: validatedData.customerId,
-            userId: validatedData.userId,
-            paymentMethod: validatedData.paymentMethod,
+            customerId: validatedData.customerId as number,
+            userId: validatedData.userId as number,
+            paymentMethod:
+              validatedData.paymentMethod as $Enums.sale_paymentMethod,
             totalAmount,
+            updatedAt: new Date(),
           },
         });
 
         // Si se están actualizando los items
         if (validatedData.items) {
           // Eliminar items existentes
-          await tx.saleItem.deleteMany({
+          await tx.saleitem.deleteMany({
             where: { saleId: data.id },
           });
 
           // Crear nuevos items
           const saleItems = await Promise.all(
-            validatedData.items.map((item) =>
-              tx.saleItem.create({
+            (validatedData.items as SaleItem[]).map((item: SaleItem) =>
+              tx.saleitem.create({
                 data: {
                   saleId: sale.id,
                   productId: item.productId,
@@ -305,9 +318,9 @@ export class SaleService {
 
           // Actualizar stock de productos
           await Promise.all(
-            validatedData.items.map((item) => {
-              const existingItem = existingSale.saleItems.find(
-                (si) => si.productId === item.productId
+            (validatedData.items as SaleItem[]).map((item: SaleItem) => {
+              const existingItem = (existingSale.saleitem as SaleItem[]).find(
+                (si: SaleItem) => si.productId === item.productId
               );
               const quantityChange = existingItem
                 ? item.quantity - existingItem.quantity
@@ -350,7 +363,7 @@ export class SaleService {
       // Verificar que la venta existe
       const existingSale = await prisma.sale.findUnique({
         where: { id },
-        include: { saleItems: true },
+        include: { saleitem: true },
       });
 
       if (!existingSale) {
@@ -370,7 +383,7 @@ export class SaleService {
       await prisma.$transaction(async (tx) => {
         // Restaurar stock de productos
         await Promise.all(
-          existingSale.saleItems.map((item) =>
+          (existingSale.saleitem as SaleItem[]).map((item: SaleItem) =>
             tx.product.update({
               where: { id: item.productId },
               data: {
@@ -383,7 +396,7 @@ export class SaleService {
         );
 
         // Eliminar items de la venta
-        await tx.saleItem.deleteMany({
+        await tx.saleitem.deleteMany({
           where: { saleId: id },
         });
 
@@ -425,10 +438,18 @@ export class SaleService {
 const saleService = new SaleService();
 
 // Exportar funciones del servicio
-export const createSaleHandler = (data: SaleCreate) =>
-  saleService.createSale(data);
-export const getSales = () => saleService.getSales();
-export const getSaleById = (id: number) => saleService.getSaleById(id);
-export const updateSaleHandler = (data: SaleUpdate & { id: number }) =>
-  saleService.updateSale(data);
-export const deleteSaleHandler = (id: number) => saleService.deleteSale(id);
+export const createSaleHandler = async (data: SaleCreate) => {
+  return await saleService.createSale(data);
+};
+export const getSales = async () => {
+  return await saleService.getSales();
+};
+export const getSaleById = async (id: number) => {
+  return await saleService.getSaleById(id);
+};
+export const updateSaleHandler = async (data: SaleUpdate & { id: number }) => {
+  return await saleService.updateSale(data);
+};
+export const deleteSaleHandler = async (id: number) => {
+  return await saleService.deleteSale(id);
+};

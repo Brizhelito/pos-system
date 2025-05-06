@@ -28,15 +28,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(sales);
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }
 
@@ -72,14 +64,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(newSale, { status: 201 });
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }

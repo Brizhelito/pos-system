@@ -6,38 +6,33 @@ import { SaleItem } from "@/types/Sale";
 import { Customer } from "@/types/Customer";
 import { $Enums } from "@prisma";
 import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { 
+import {
   AlertCircle,
-  Banknote, 
-  Building, 
-  Calendar, 
+  Banknote,
+  Building,
   CheckCircle2,
-  CreditCard, 
+  CreditCard,
   Loader2,
-  Printer, 
-  Receipt, 
-  ReceiptText, 
-  Send, 
-  ShoppingBag, 
+  Printer,
+  Receipt,
+  Send,
+  ShoppingBag,
   User,
   CircleDollarSign,
   Mail,
   Phone,
-  MapPin,
   ArrowLeft,
-  X
+  X,
 } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
 
@@ -47,7 +42,13 @@ interface SaleConfirmationProps {
   totalAmount: number;
   paymentMethod: $Enums.sale_paymentMethod;
   onCompleteSale?: () => void;
-  onConfirm?: (saleData: any) => Promise<void>;
+  onConfirm?: (saleData: {
+    customer: Customer;
+    items: SaleItem[];
+    totalAmount: number;
+    paymentMethod: $Enums.sale_paymentMethod;
+    totalWithTax: number;
+  }) => Promise<void>;
   onCancel?: () => void;
   onBack?: () => void;
 }

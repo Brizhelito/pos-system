@@ -4,11 +4,28 @@ import { Product } from "@/types/Products";
 import { SaleItem } from "@/types/Sale";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Search, ShoppingCart, Plus, Minus, Trash2, Loader2, ChevronLeft, ChevronRight, PackageOpen, CircleDollarSign, FileText, BarChart3 } from "lucide-react";
+import {
+  Search,
+  ShoppingCart,
+  Plus,
+  Minus,
+  Trash2,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  PackageOpen,
+  CircleDollarSign,
+  BarChart3,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";

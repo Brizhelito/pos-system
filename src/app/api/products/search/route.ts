@@ -34,14 +34,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(products);
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }

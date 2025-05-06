@@ -50,8 +50,13 @@ export class CategoryService {
         }
 
         // Crear la categoría
+        const now = new Date();
         const newCategory = await tx.category.create({
-          data: validatedData,
+          data: {
+            ...validatedData,
+            createdAt: now,
+            updatedAt: now,
+          },
         });
 
         return CategorySchema.parse(newCategory);
@@ -140,7 +145,7 @@ export class CategoryService {
       const category = await prisma.category.findUnique({
         where: { id },
         include: {
-          products: true,
+          product: true,
         },
       });
 

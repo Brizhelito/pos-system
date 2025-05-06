@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 import { Product } from "@/types/Products";
 import { SaleItem } from "@/types/Sale";
@@ -7,13 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Search, ShoppingCart, Plus, Minus, Trash2, Loader2, FileText, BarChart3, LayoutGrid, ChevronRight, ChevronLeft } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, ShoppingCart, Plus, Minus, Trash2, Loader2, FileText, LayoutGrid, ChevronRight, ChevronLeft } from "lucide-react";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import useSWR from "swr";
 import { cn } from "@/lib/utils";
-import { useHotkeys } from "react-hotkeys-hook";
 
 // Fetcher function for SWR
 const fetcher = (url: string) => fetch(url).then(res => {
@@ -160,7 +159,6 @@ export function CompactProductSearch({
       if (activeTab === "products" && filteredProducts.length > 0) {
         const numProducts = filteredProducts.length;
         const productsPerPage = pageSize;
-        const totalPages = Math.ceil(numProducts / productsPerPage);
         
         // Get current page products
         const startIndex = (currentPage - 1) * productsPerPage;
@@ -304,12 +302,7 @@ export function CompactProductSearch({
   }, [activeTab, cartItems, colsPerRow, currentPage, filteredProducts, onRemoveFromCart, pageSize, selectedCartItemIndex, selectedIndex, selectedProduct]);
 
   // Handle quantity change for a product
-  const handleQuantityChange = (productId: number, value: number) => {
-    setProductQuantities(prev => ({
-      ...prev,
-      [productId]: value
-    }));
-  };
+ 
 
   // Handle quantity change for a cart item
   const handleCartQuantityChange = (productId: number, value: number) => {

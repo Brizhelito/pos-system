@@ -24,15 +24,12 @@ export async function GET(
 
     // Verificar que el usuario esté autenticado
     if (!session.user) {
-      return NextResponse.json(
-        { message: "No autorizado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     // Obtener ID del proveedor de los parámetros de ruta
     const providerId = parseInt(params.id, 10);
-    
+
     if (isNaN(providerId)) {
       return NextResponse.json(
         { message: "ID de proveedor inválido", code: "INVALID_PROVIDER_ID" },
@@ -42,18 +39,10 @@ export async function GET(
 
     // Obtener el proveedor por ID
     const provider = await getProviderById(providerId);
-    
+
     return NextResponse.json(provider);
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }
 
@@ -71,7 +60,7 @@ export async function PUT(
     );
 
     // Verificar que el usuario esté autenticado y tenga permisos de administrador
-    if (!session.user || session.user.role !== 'ADMIN') {
+    if (!session.user || session.user.role !== "ADMIN") {
       return NextResponse.json(
         { message: "No autorizado para actualizar proveedores" },
         { status: 403 }
@@ -80,7 +69,7 @@ export async function PUT(
 
     // Obtener ID del proveedor de los parámetros de ruta
     const providerId = parseInt(params.id, 10);
-    
+
     if (isNaN(providerId)) {
       return NextResponse.json(
         { message: "ID de proveedor inválido", code: "INVALID_PROVIDER_ID" },
@@ -90,30 +79,22 @@ export async function PUT(
 
     // Obtener datos del cuerpo de la solicitud
     const body = await req.json();
-    
+
     // Combinar ID de ruta con los datos del cuerpo
     const updateData = {
       ...body,
       id: providerId, // Asegurar que el ID coincida con la ruta
     };
-    
+
     // Validar datos con Zod schema
     const validatedData = ProviderUpdateSchema.parse(updateData);
-    
+
     // Actualizar proveedor usando el servicio
     const updatedProvider = await updateProviderHandler(validatedData);
-    
+
     return NextResponse.json(updatedProvider);
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }
 
@@ -131,7 +112,7 @@ export async function DELETE(
     );
 
     // Verificar que el usuario esté autenticado y tenga permisos de administrador
-    if (!session.user || session.user.role !== 'ADMIN') {
+    if (!session.user || session.user.role !== "ADMIN") {
       return NextResponse.json(
         { message: "No autorizado para eliminar proveedores" },
         { status: 403 }
@@ -140,7 +121,7 @@ export async function DELETE(
 
     // Obtener ID del proveedor de los parámetros de ruta
     const providerId = parseInt(params.id, 10);
-    
+
     if (isNaN(providerId)) {
       return NextResponse.json(
         { message: "ID de proveedor inválido", code: "INVALID_PROVIDER_ID" },
@@ -150,22 +131,12 @@ export async function DELETE(
 
     // Eliminar proveedor usando el servicio
     const deletedProvider = await deleteProviderHandler(providerId);
-    
-    return NextResponse.json(
-      { 
-        message: "Proveedor eliminado correctamente",
-        provider: deletedProvider 
-      }
-    );
+
+    return NextResponse.json({
+      message: "Proveedor eliminado correctamente",
+      provider: deletedProvider,
+    });
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }

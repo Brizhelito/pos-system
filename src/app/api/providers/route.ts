@@ -20,10 +20,7 @@ export async function GET(req: NextRequest) {
 
     // Verificar que el usuario esté autenticado
     if (!session.user) {
-      return NextResponse.json(
-        { message: "No autorizado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     // Obtener todos los proveedores
@@ -31,15 +28,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(providers);
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }
 
@@ -54,7 +43,7 @@ export async function POST(req: NextRequest) {
     );
 
     // Verificar que el usuario esté autenticado y tenga permisos de administrador
-    if (!session.user || session.user.role !== 'ADMIN') {
+    if (!session.user || session.user.role !== "ADMIN") {
       return NextResponse.json(
         { message: "No autorizado para crear proveedores" },
         { status: 403 }
@@ -63,23 +52,15 @@ export async function POST(req: NextRequest) {
 
     // Obtener datos del cuerpo de la solicitud
     const body = await req.json();
-    
+
     // Validar datos con Zod schema
     const validatedData = ProviderCreateSchema.parse(body);
-    
+
     // Crear proveedor usando el servicio
     const newProvider = await createProviderHandler(validatedData);
-    
+
     return NextResponse.json(newProvider, { status: 201 });
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }

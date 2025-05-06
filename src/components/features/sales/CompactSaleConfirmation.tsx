@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { SaleItem } from "@/types/Sale";
 import { Customer } from "@/types/Customer";
 import { $Enums } from "@prisma";
@@ -10,18 +9,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
   AlertCircle,
-  Banknote, 
-  Building, 
+  Banknote,
+  Building,
   CheckCircle2,
-  CreditCard, 
+  CreditCard,
   Loader2,
-  Receipt, 
+  Receipt,
   User,
   CircleDollarSign,
   ChevronLeft,
-  ChevronRight
 } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { cn } from "@/lib/utils";
@@ -32,7 +30,13 @@ interface SaleConfirmationProps {
   totalAmount: number;
   paymentMethod: $Enums.sale_paymentMethod;
   onCompleteSale?: () => void;
-  onConfirm?: (saleData: any) => Promise<void>;
+  onConfirm?: (saleData: {
+    customer: Customer;
+    items: SaleItem[];
+    totalAmount: number;
+    paymentMethod: $Enums.sale_paymentMethod;
+    date: Date;
+  }) => Promise<void>;
   onCancel?: () => void;
   onBack?: () => void;
 }

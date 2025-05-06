@@ -5,16 +5,12 @@ import { useRouter } from "next/navigation";
 import { useSalesContext } from "@/contexts/SalesContext";
 import { SalesStep } from "@/types/SalesFlow";
 import { SalesStepIndicator } from "@/components/features/sales/SalesStepIndicator";
-import { CompactCustomerSearch } from "@/components/features/sales/CompactCustomerSearch";
 import { CustomerSearch } from "@/components/features/sales";
+import { Customer } from "@/types/Customer";
 
 export default function CustomerSelectionPage() {
   const router = useRouter();
-  const { 
-    state, 
-    setSelectedCustomer, 
-    setCurrentStep 
-  } = useSalesContext();
+  const { state, setSelectedCustomer, setCurrentStep } = useSalesContext();
 
   // Actualizar el paso actual en el contexto
   useEffect(() => {
@@ -24,8 +20,10 @@ export default function CustomerSelectionPage() {
     }
   }, [state, setCurrentStep]);
 
-  const handleSelectCustomer = (customer: any) => {
-    setSelectedCustomer(customer);
+  const handleSelectCustomer = (customer: Customer | null) => {
+    if (customer) {
+      setSelectedCustomer(customer);
+    }
   };
 
   const handleContinue = () => {
@@ -42,14 +40,14 @@ export default function CustomerSelectionPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <SalesStepIndicator />
-      
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Selección de Cliente</h1>
         <p className="text-muted-foreground mt-2">
           Seleccione un cliente para continuar con la venta o cree uno nuevo.
         </p>
       </div>
-      
+
       <CustomerSearch
         selectedCustomer={state.selectedCustomer}
         onSelectCustomer={handleSelectCustomer}

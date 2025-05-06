@@ -32,24 +32,9 @@ export async function POST(
     // If successful, return a NextResponse with status 201
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    // --- Centralized Error Handling ---
-
-    // Pass ANY caught error to your handleError function
-    const apiErrorResponse = handleError(error);
-
-    // Use the result from handleError to construct the NextResponse
-    // This ensures a consistent error format and status code
-    console.error("An error occurred, handled response:", apiErrorResponse);
-
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-        // Optionally, include other fields from apiErrorResponse if your handleError returns them
-        // details: apiErrorResponse.details,
-      },
-      { status: apiErrorResponse.statusCode } // Use the status code from handleError
-    );
+    // Handle errors using your error handling function
+    // This should catch validation errors and APIErrors
+    return handleError(error);
   }
 }
 

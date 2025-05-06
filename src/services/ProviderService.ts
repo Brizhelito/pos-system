@@ -48,8 +48,13 @@ export class ProviderService {
           );
         }
 
+        const now = new Date();
         const newProvider = await tx.provider.create({
-          data: validatedData,
+          data: {
+            ...validatedData,
+            createdAt: now,
+            updatedAt: now,
+          },
         });
 
         return ProviderSchema.parse(newProvider);
@@ -119,7 +124,7 @@ export class ProviderService {
       const provider = await prisma.provider.findUnique({
         where: { id },
         include: {
-          products: true,
+          product: true,
         },
       });
 

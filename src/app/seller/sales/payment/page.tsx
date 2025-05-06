@@ -7,7 +7,6 @@ import { PaymentMethod } from "@/components/features/sales/PaymentMethod";
 import { SalesStep } from "@/types/SalesFlow";
 import { SalesStepIndicator } from "@/components/features/sales/SalesStepIndicator";
 import { $Enums } from "@prisma";
-import { CompactPaymentMethod } from "@/components/features/sales/CompactPaymentMethod";
 
 export default function PaymentMethodPage() {
   const router = useRouter();

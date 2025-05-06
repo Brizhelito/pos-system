@@ -13,7 +13,7 @@ export const SaleItemSchema = z.object({
 export const SaleBaseSchema = z
   .object({
     customerId: z.number().int().positive(),
-    paymentMethod: z.nativeEnum($Enums.PaymentMethod),
+    paymentMethod: z.nativeEnum($Enums.sale_paymentMethod),
     items: z.array(SaleItemSchema),
   })
   .extend({
@@ -31,7 +31,7 @@ export const SaleSchema = SaleBaseSchema.extend({
   id: z.number().int().positive(),
   userId: z.number().int().positive(),
   saleDate: z.date(),
-  status: z.nativeEnum($Enums.SaleStatus),
+  status: z.nativeEnum($Enums.sale_status),
 });
 
 // --- TypeScript Types ---

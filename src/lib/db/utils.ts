@@ -1,5 +1,3 @@
-import { prisma } from "../config/db";
-
 /**
  * Función de utilidad para convertir IDs de string a number cuando sea necesario
  */

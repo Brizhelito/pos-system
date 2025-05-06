@@ -8,16 +8,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { CustomerCreateSchema } from "@/types/Customer";
 import { toast } from "sonner";
 import { useHotkeys } from "react-hotkeys-hook";
-import { 
-  Loader2, Search, UserPlus, Edit, ChevronLeft, 
-  ArrowRight, User, AlertCircle, Check, AlertTriangle,
-  Command
-} from "lucide-react";  
-import { 
+import {
+  Loader2,
+  Search,
+  UserPlus,
+  Edit,
+  ChevronLeft,
+  ArrowRight,
+  User,
+  AlertCircle,
+  Check,
+  Command,
+} from "lucide-react";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -30,10 +36,11 @@ import {
 import useSWR, { mutate } from "swr";
 
 // Fetcher function for SWR
-const fetcher = (url: string) => fetch(url).then(res => {
-  if (!res.ok) throw new Error("Error al cargar los datos");
-  return res.json();
-});
+const fetcher = (url: string) =>
+  fetch(url).then((res) => {
+    if (!res.ok) throw new Error("Error al cargar los datos");
+    return res.json();
+  });
 
 interface CustomerSearchProps {
   onSelectCustomer: (customer: Customer | null) => void;
@@ -42,7 +49,12 @@ interface CustomerSearchProps {
   onBack?: () => void;
 }
 
-export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue, onBack }: CustomerSearchProps) {
+export function CustomerSearch({
+  onSelectCustomer,
+  selectedCustomer,
+  onContinue,
+  onBack,
+}: CustomerSearchProps) {
   // Estado para la interfaz
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -52,27 +64,26 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
   const [foundCustomer, setFoundCustomer] = useState<Customer | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notFoundMessage, setNotFoundMessage] = useState("");
-  
+
   // Referencias para navegación
   const searchInputRef = useRef<HTMLInputElement>(null);
   const continueButtonRef = useRef<HTMLButtonElement>(null);
-  const createButtonRef = useRef<HTMLButtonElement>(null);
 
   // Obtener datos de clientes
-  const { data: customers, error, isLoading } = useSWR<Customer[]>(
-    '/api/customers',
-    fetcher,
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 10000, // 10 segundos
-    }
-  );
+  const {
+    data: customers,
+    error,
+    isLoading,
+  } = useSWR<Customer[]>("/api/customers", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 10000, // 10 segundos
+  });
 
   // Formularios
-  const searchForm = useForm<{cedula: string}>({
+  const searchForm = useForm<{ cedula: string }>({
     defaultValues: {
-      cedula: ""
-    }
+      cedula: "",
+    },
   });
 
   const createForm = useForm<CustomerCreate>({
@@ -94,75 +105,80 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
       cedula: "",
     },
   });
-  
+
   // Función para formatear la cédula automáticamente
   const formatCedula = (value: string): string => {
     if (!value) return "";
-    
+
     // Si es solo un número (sin prefijo), lo dejamos así
     if (/^\d+$/.test(value)) {
       return value;
     }
-    
+
     // Si ya tiene el formato correcto con cualquier prefijo válido (J, V, E, P), no hacer nada
     if (/^[JVEP]-\d+$/.test(value)) {
       return value;
     }
-    
+
     // Si comienza con J, V, E o P pero falta el guion, añadirlo
     if (/^[JVEP]\d+$/.test(value)) {
-      return value.replace(/^([JVEP])/, '$1-');
+      return value.replace(/^([JVEP])/, "$1-");
     }
-    
+
     // Si comienza con prefijo en minúscula (j, v, e, p), convertirlo a mayúscula y añadir guion
     if (/^[jvep]\d*$/.test(value)) {
       return value.replace(/^([jvep])(\d*)$/, (_, prefix, numbers) => {
         return `${prefix.toUpperCase()}-${numbers}`;
       });
     }
-    
+
     // Si es solo la letra del prefijo (j, v, e, p), convertirla a mayúscula y añadir guión
     if (/^[jvepJVEP]$/.test(value)) {
       return `${value.toUpperCase()}-`;
     }
-    
+
     return value;
   };
 
   // Manejar cambio en el campo de cédula
-  const handleCedulaChange = (event: React.ChangeEvent<HTMLInputElement>, form: any) => {
+
+  const handleCedulaChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    form: any
+  ) => {
     const formattedCedula = formatCedula(event.target.value);
     form.setValue("cedula", formattedCedula);
     if (event.target === searchInputRef.current) {
       setSearchQuery(formattedCedula);
     }
   };
-  
+
   // Buscar un cliente por cédula
   const searchCustomerByCedula = (cedula: string): Customer | null => {
     if (!customers || !cedula) return null;
-    
+
     const searchTerm = cedula.trim();
-    
+
     // Buscar coincidencia exacta primero
-    let found = customers.find(c => c.cedula === searchTerm);
-    
+    let found = customers.find((c) => c.cedula === searchTerm);
+
     // Si no se encuentra, buscar coincidencia sin importar prefijo
     if (!found) {
       // Si el input es un número, buscamos cualquier cédula que termine con ese número
       if (/^\d+$/.test(searchTerm)) {
-        found = customers.find(c => {
+        found = customers.find((c) => {
           if (!c.cedula) return false;
           // Extraer solo los números de la cédula almacenada
-          const numbers = c.cedula.replace(/[^0-9]/g, '');
+          const numbers = c.cedula.replace(/[^0-9]/g, "");
           return numbers === searchTerm;
         });
       }
     }
-    
+
     return found || null;
   };
-  
+
   // Manejar la búsqueda por cédula
   const handleCedulaSearch = () => {
     if (!searchQuery.trim()) {
@@ -171,7 +187,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
     }
 
     const customer = searchCustomerByCedula(searchQuery);
-    
+
     if (customer) {
       // En lugar de seleccionar automáticamente, mostrar diálogo de confirmación
       setFoundCustomer(customer);
@@ -185,7 +201,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
       setShowConfirmDialog(true);
     }
   };
-  
+
   // Handle cuando el usuario presiona Enter en el campo de búsqueda
   const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -193,7 +209,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
       handleCedulaSearch();
     }
   };
-  
+
   // Abrir diálogo para crear cliente desde la búsqueda
   const createCustomerFromSearch = () => {
     // Si se ingresó solo un número, añadir el prefijo V- por defecto
@@ -203,35 +219,35 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
     } else {
       formattedCedula = formatCedula(searchQuery);
     }
-    
+
     createForm.setValue("cedula", formattedCedula);
     setShowCreateDialog(true);
     setShowConfirmDialog(false); // Cerrar el diálogo de confirmación
   };
-  
+
   // Manejar creación de nuevo cliente
   const handleCreateCustomer = async (data: CustomerCreate) => {
     setIsSubmitting(true);
-    
+
     try {
-      const response = await fetch('/api/customers', {
+      const response = await fetch("/api/customers", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Error creating customer');
+        throw new Error(errorData.error || "Error creating customer");
       }
-      
+
       const newCustomer = await response.json();
-      
+
       // Revalidate SWR cache
-      mutate('/api/customers');
-      
+      mutate("/api/customers");
+
       setShowCreateDialog(false);
       createForm.reset();
       toast.success("Cliente creado exitosamente");
@@ -244,27 +260,27 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
       setIsSubmitting(false);
     }
   };
-  
+
   // Abrir el diálogo de edición
   const openEditDialog = () => {
     if (!selectedCustomer) return;
-    
+
     editForm.reset({
       name: selectedCustomer.name,
       email: selectedCustomer.email || "",
       phone: selectedCustomer.phone || "",
       cedula: selectedCustomer.cedula || "",
     });
-    
+
     setShowEditDialog(true);
   };
-  
+
   // Manejar edición de cliente
   const handleEditCustomer = async (data: CustomerCreate) => {
     if (!selectedCustomer) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const response = await fetch(`/api/customers/${selectedCustomer.id}`, {
         method: "PUT",
@@ -273,16 +289,16 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
         },
         body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
         throw new Error("Error al actualizar el cliente");
       }
-      
+
       const updatedCustomer = await response.json();
-      
+
       // Update cache
-      mutate('/api/customers');
-      
+      mutate("/api/customers");
+
       toast.success("Cliente actualizado correctamente");
       setShowEditDialog(false);
       onSelectCustomer(updatedCustomer);
@@ -293,7 +309,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
       setIsSubmitting(false);
     }
   };
-  
+
   // Cancelar la búsqueda
   const cancelSearch = () => {
     setShowConfirmDialog(false);
@@ -302,7 +318,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
       searchInputRef.current.focus();
     }
   };
-  
+
   // Confirmar selección de cliente
   const confirmCustomerSelection = () => {
     if (foundCustomer) {
@@ -310,7 +326,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
       setShowCustomerFoundDialog(false);
     }
   };
-  
+
   // Cancelar selección de cliente
   const cancelCustomerSelection = () => {
     setShowCustomerFoundDialog(false);
@@ -320,35 +336,50 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
       searchInputRef.current.focus();
     }
   };
-  
+
   // Atajos de teclado para todo el componente
-  useHotkeys('alt+f', () => {
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, { enableOnFormTags: ['INPUT'] }, [searchInputRef]);
-  
+  useHotkeys(
+    "alt+f",
+    () => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    },
+    { enableOnFormTags: ["INPUT"] },
+    [searchInputRef]
+  );
+
   // Atajo para confirmar la selección del cliente cuando el diálogo está abierto
-  useHotkeys('enter', () => {
-    if (showCustomerFoundDialog && foundCustomer) {
-      confirmCustomerSelection();
-    }
-  }, { enabled: showCustomerFoundDialog }, [showCustomerFoundDialog, foundCustomer]);
-  
+  useHotkeys(
+    "enter",
+    () => {
+      if (showCustomerFoundDialog && foundCustomer) {
+        confirmCustomerSelection();
+      }
+    },
+    { enabled: showCustomerFoundDialog },
+    [showCustomerFoundDialog, foundCustomer]
+  );
+
   // Atajo para crear un nuevo cliente desde el diálogo de confirmación
-  useHotkeys('alt+c', () => {
-    if (showConfirmDialog) {
-      createCustomerFromSearch();
-    }
-  }, { enabled: showConfirmDialog }, [showConfirmDialog]);
-  
+  useHotkeys(
+    "alt+c",
+    () => {
+      if (showConfirmDialog) {
+        createCustomerFromSearch();
+      }
+    },
+    { enabled: showConfirmDialog },
+    [showConfirmDialog]
+  );
+
   // Efecto para auto-enfocar el campo de búsqueda al montar
   useEffect(() => {
     if (searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, []);
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -370,15 +401,16 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm text-slate-600 mb-4">
-            Ingrese el número de cédula del cliente y presione Enter para continuar
+            Ingrese el número de cédula del cliente y presione Enter para
+            continuar
           </div>
-          
+
           <Form {...searchForm}>
             <div className="flex gap-2">
               <FormField
                 control={searchForm.control}
                 name="cedula"
-                render={({ field }) => (
+                render={() => (
                   <FormItem className="w-full">
                     <div className="relative w-full">
                       <FormControl>
@@ -401,15 +433,12 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   </FormItem>
                 )}
               />
-              <Button 
-                type="button"
-                onClick={handleCedulaSearch}
-              >
+              <Button type="button" onClick={handleCedulaSearch}>
                 Buscar
               </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => {
                   createForm.reset();
                   setShowCreateDialog(true);
@@ -420,14 +449,14 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
               </Button>
             </div>
           </Form>
-          
+
           {notFoundMessage && !showConfirmDialog && (
             <div className="flex items-center mt-2 text-amber-600 text-sm bg-amber-50 p-3 rounded-md">
               <AlertCircle size={16} className="mr-2" />
               {notFoundMessage}
             </div>
           )}
-          
+
           {/* Mostrar detalles del cliente cuando es seleccionado */}
           {selectedCustomer && (
             <motion.div
@@ -440,24 +469,39 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <User className="text-green-600" size={20} />
-                      <h3 className="text-lg font-medium">{selectedCustomer.name}</h3>
+                      <h3 className="text-lg font-medium">
+                        {selectedCustomer.name}
+                      </h3>
                     </div>
-                    
+
                     <div className="text-sm space-y-1 text-slate-700">
-                      <p><span className="font-medium">Cédula:</span> {selectedCustomer.cedula || "No especificada"}</p>
-                      <p><span className="font-medium">Teléfono:</span> {selectedCustomer.phone || "No especificado"}</p>
-                      <p><span className="font-medium">Email:</span> {selectedCustomer.email || "No especificado"}</p>
+                      <p>
+                        <span className="font-medium">Cédula:</span>{" "}
+                        {selectedCustomer.cedula || "No especificada"}
+                      </p>
+                      <p>
+                        <span className="font-medium">Teléfono:</span>{" "}
+                        {selectedCustomer.phone || "No especificado"}
+                      </p>
+                      <p>
+                        <span className="font-medium">Email:</span>{" "}
+                        {selectedCustomer.email || "No especificado"}
+                      </p>
                     </div>
                   </div>
-                  
+
                   <Button variant="outline" size="sm" onClick={openEditDialog}>
                     <Edit size={16} className="mr-2" />
                     Editar
                   </Button>
                 </div>
-                
+
                 <div className="mt-4 pt-4 border-t border-green-200 flex justify-end">
-                  <Button onClick={onContinue} disabled={!onContinue} ref={continueButtonRef}>
+                  <Button
+                    onClick={onContinue}
+                    disabled={!onContinue}
+                    ref={continueButtonRef}
+                  >
                     Continuar con este cliente
                     <ArrowRight size={16} className="ml-2" />
                   </Button>
@@ -487,32 +531,36 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
             </h3>
             <div className="grid grid-cols-2 gap-2">
               <div className="flex items-center">
-                <kbd className="px-2 py-1 bg-white rounded border border-slate-300 mr-2 text-xs">Alt + F</kbd>
+                <kbd className="px-2 py-1 bg-white rounded border border-slate-300 mr-2 text-xs">
+                  Alt + F
+                </kbd>
                 <span>Enfocar búsqueda</span>
               </div>
               <div className="flex items-center">
-                <kbd className="px-2 py-1 bg-white rounded border border-slate-300 mr-2 text-xs">Enter</kbd>
+                <kbd className="px-2 py-1 bg-white rounded border border-slate-300 mr-2 text-xs">
+                  Enter
+                </kbd>
                 <span>Buscar / Confirmar</span>
               </div>
               <div className="flex items-center">
-                <kbd className="px-2 py-1 bg-white rounded border border-slate-300 mr-2 text-xs">Alt + C</kbd>
+                <kbd className="px-2 py-1 bg-white rounded border border-slate-300 mr-2 text-xs">
+                  Alt + C
+                </kbd>
                 <span>Crear cliente</span>
               </div>
               <div className="flex items-center">
-                <kbd className="px-2 py-1 bg-white rounded border border-slate-300 mr-2 text-xs">Esc</kbd>
+                <kbd className="px-2 py-1 bg-white rounded border border-slate-300 mr-2 text-xs">
+                  Esc
+                </kbd>
                 <span>Cancelar / Volver</span>
               </div>
             </div>
           </div>
-          
+
           {/* Botones de navegación */}
           <div className="flex w-full justify-between">
             {onBack && (
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={onBack}
-              >
+              <Button type="button" variant="outline" onClick={onBack}>
                 <ChevronLeft size={16} className="mr-2" />
                 Volver
               </Button>
@@ -529,14 +577,10 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                 <ArrowRight size={16} className="ml-2" />
               </Button>
             )}
-            
+
             {selectedCustomer && onContinue && (
-              <Button
-                type="button"
-                className="ml-auto"
-                onClick={onContinue}
-              >
-                Continuar con {selectedCustomer.name.split(' ')[0]}
+              <Button type="button" className="ml-auto" onClick={onContinue}>
+                Continuar con {selectedCustomer.name.split(" ")[0]}
                 <ArrowRight size={16} className="ml-2" />
               </Button>
             )}
@@ -550,12 +594,15 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
           <AlertDialogHeader>
             <AlertDialogTitle>Cliente no encontrado</AlertDialogTitle>
             <AlertDialogDescription>
-              No se encontró ningún cliente con la cédula <span className="font-medium">{searchQuery}</span>. 
-              ¿Desea crear un nuevo cliente con estos datos?
+              No se encontró ningún cliente con la cédula{" "}
+              <span className="font-medium">{searchQuery}</span>. ¿Desea crear
+              un nuevo cliente con estos datos?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelSearch}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel onClick={cancelSearch}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction onClick={createCustomerFromSearch}>
               <UserPlus size={16} className="mr-2" />
               Crear cliente
@@ -563,33 +610,50 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      
+
       {/* Diálogo de confirmación cuando se encuentra un cliente */}
-      <AlertDialog open={showCustomerFoundDialog} onOpenChange={setShowCustomerFoundDialog}>
+      <AlertDialog
+        open={showCustomerFoundDialog}
+        onOpenChange={setShowCustomerFoundDialog}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Cliente encontrado</AlertDialogTitle>
             <AlertDialogDescription>
-              Se encontró el siguiente cliente con la cédula <span className="font-medium">{searchQuery}</span>
+              Se encontró el siguiente cliente con la cédula{" "}
+              <span className="font-medium">{searchQuery}</span>
             </AlertDialogDescription>
-            
+
             {foundCustomer && (
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
-                <div className="font-medium text-green-900">{foundCustomer.name}</div>
+                <div className="font-medium text-green-900">
+                  {foundCustomer.name}
+                </div>
                 <div className="text-sm space-y-1 text-slate-700 mt-1">
-                  <div><span className="font-medium">Cédula:</span> {foundCustomer.cedula || "No especificada"}</div>
-                  <div><span className="font-medium">Teléfono:</span> {foundCustomer.phone || "No especificado"}</div>
-                  <div><span className="font-medium">Email:</span> {foundCustomer.email || "No especificado"}</div>
+                  <div>
+                    <span className="font-medium">Cédula:</span>{" "}
+                    {foundCustomer.cedula || "No especificada"}
+                  </div>
+                  <div>
+                    <span className="font-medium">Teléfono:</span>{" "}
+                    {foundCustomer.phone || "No especificado"}
+                  </div>
+                  <div>
+                    <span className="font-medium">Email:</span>{" "}
+                    {foundCustomer.email || "No especificado"}
+                  </div>
                 </div>
               </div>
             )}
-            
+
             <div className="mt-4 text-sm text-muted-foreground">
               ¿Desea seleccionar este cliente para la compra?
             </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelCustomerSelection}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel onClick={cancelCustomerSelection}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction onClick={confirmCustomerSelection}>
               <Check size={16} className="mr-2" />
               Seleccionar cliente
@@ -607,9 +671,12 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
               Ingresa la información del cliente.
             </DialogDescription>
           </DialogHeader>
-          
+
           <Form {...createForm}>
-            <form onSubmit={createForm.handleSubmit(handleCreateCustomer)} className="space-y-4">
+            <form
+              onSubmit={createForm.handleSubmit(handleCreateCustomer)}
+              className="space-y-4"
+            >
               <FormField
                 control={createForm.control}
                 name="name"
@@ -617,8 +684,8 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   <FormItem>
                     <FormLabel>Nombre completo</FormLabel>
                     <FormControl>
-                      <Input 
-                        autoFocus 
+                      <Input
+                        autoFocus
                         value={field.value || ""}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
@@ -630,7 +697,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={createForm.control}
                 name="cedula"
@@ -638,7 +705,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   <FormItem>
                     <FormLabel>Cédula</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         value={field.value || ""}
                         onChange={(e) => {
                           handleCedulaChange(e, createForm);
@@ -653,7 +720,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={createForm.control}
                 name="phone"
@@ -661,7 +728,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   <FormItem>
                     <FormLabel>Teléfono</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         value={field.value || ""}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
@@ -673,7 +740,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={createForm.control}
                 name="email"
@@ -681,7 +748,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         type="email"
                         value={field.value || ""}
                         onChange={field.onChange}
@@ -694,9 +761,13 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   </FormItem>
                 )}
               />
-              
+
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateDialog(false)}
+                >
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
@@ -724,9 +795,12 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
               Actualiza la información del cliente.
             </DialogDescription>
           </DialogHeader>
-          
+
           <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(handleEditCustomer)} className="space-y-4">
+            <form
+              onSubmit={editForm.handleSubmit(handleEditCustomer)}
+              className="space-y-4"
+            >
               <FormField
                 control={editForm.control}
                 name="name"
@@ -734,8 +808,8 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   <FormItem>
                     <FormLabel>Nombre completo</FormLabel>
                     <FormControl>
-                      <Input 
-                        autoFocus 
+                      <Input
+                        autoFocus
                         value={field.value || ""}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
@@ -747,7 +821,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={editForm.control}
                 name="cedula"
@@ -755,7 +829,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   <FormItem>
                     <FormLabel>Cédula</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         value={field.value || ""}
                         onChange={(e) => {
                           handleCedulaChange(e, editForm);
@@ -770,7 +844,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={editForm.control}
                 name="phone"
@@ -778,7 +852,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   <FormItem>
                     <FormLabel>Teléfono</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         value={field.value || ""}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
@@ -790,7 +864,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={editForm.control}
                 name="email"
@@ -798,7 +872,7 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         type="email"
                         value={field.value || ""}
                         onChange={field.onChange}
@@ -811,9 +885,13 @@ export function CustomerSearch({ onSelectCustomer, selectedCustomer, onContinue,
                   </FormItem>
                 )}
               />
-              
+
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowEditDialog(false)}
+                >
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>

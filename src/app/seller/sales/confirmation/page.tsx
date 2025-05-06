@@ -6,15 +6,14 @@ import { useSalesContext } from "@/contexts/SalesContext";
 import { SaleConfirmation } from "@/components/features/sales/SaleConfirmation";
 import { SalesStep } from "@/types/SalesFlow";
 import { SalesStepIndicator } from "@/components/features/sales/SalesStepIndicator";
-import { CompactSaleConfirmation } from "@/components/features/sales/CompactSaleConfirmation";
 
 export default function ConfirmationPage() {
   const router = useRouter();
-  const { 
-    state: { selectedCustomer, cartItems, paymentMethod, currentStep }, 
+  const {
+    state: { selectedCustomer, cartItems, paymentMethod, currentStep },
     setCurrentStep,
     completeSale,
-    resetSale
+    resetSale,
   } = useSalesContext();
 
   // Validar que existe un cliente seleccionado, productos en el carrito y un método de pago
@@ -36,14 +35,18 @@ export default function ConfirmationPage() {
     }
   }, [currentStep, setCurrentStep]);
 
-  const handleConfirm = async (saleData: any) => {
+  const handleConfirm = async () => {
     // Al completar la venta, establecer el estado para mostrar el estado de completado
     await completeSale();
     router.push("/seller/sales?completed=true");
   };
 
   const handleCancel = () => {
-    if (window.confirm("¿Está seguro de que desea cancelar esta venta? Se perderán todos los datos.")) {
+    if (
+      window.confirm(
+        "¿Está seguro de que desea cancelar esta venta? Se perderán todos los datos."
+      )
+    ) {
       resetSale();
       router.push("/seller/sales");
     }
@@ -56,18 +59,21 @@ export default function ConfirmationPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <SalesStepIndicator />
-      
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Confirmar Venta</h1>
         <p className="text-muted-foreground mt-2">
           Verifique los detalles de la venta antes de confirmar.
         </p>
       </div>
-      
-      <SaleConfirmation 
+
+      <SaleConfirmation
         customer={selectedCustomer!}
         items={cartItems}
-        totalAmount={cartItems.reduce((total, item) => total + item.subtotal, 0)}
+        totalAmount={cartItems.reduce(
+          (total, item) => total + item.subtotal,
+          0
+        )}
         paymentMethod={paymentMethod!}
         onConfirm={handleConfirm}
         onCancel={handleCancel}

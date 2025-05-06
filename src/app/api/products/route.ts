@@ -20,10 +20,7 @@ export async function GET(req: NextRequest) {
 
     // Verificar que el usuario esté autenticado
     if (!session.user) {
-      return NextResponse.json(
-        { message: "No autorizado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     // Extraer parámetros de la URL
@@ -37,26 +34,22 @@ export async function GET(req: NextRequest) {
       const products = await productService.searchProducts(searchQuery);
       return NextResponse.json(products);
     }
-    
+
     // Si hay paginación
     if (pageSize > 0) {
-      const result = await productService.getProductsPaginated(page, pageSize, searchQuery);
+      const result = await productService.getProductsPaginated(
+        page,
+        pageSize,
+        searchQuery
+      );
       return NextResponse.json(result);
     }
-    
+
     // Caso por defecto: traer todos los productos
     const products = await productService.getProducts();
     return NextResponse.json(products);
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }
 
@@ -71,7 +64,7 @@ export async function POST(req: NextRequest) {
     );
 
     // Verificar que el usuario esté autenticado y tenga permisos de administrador
-    if (!session.user || session.user.role !== 'ADMIN') {
+    if (!session.user || session.user.role !== "ADMIN") {
       return NextResponse.json(
         { message: "No autorizado para crear productos" },
         { status: 403 }
@@ -80,23 +73,15 @@ export async function POST(req: NextRequest) {
 
     // Obtener datos del cuerpo de la solicitud
     const body = await req.json();
-    
+
     // Validar datos con Zod schema
     const validatedData = ProductCreateSchema.parse(body);
-    
+
     // Crear producto usando el servicio
     const newProduct = await productService.createProduct(validatedData);
-    
+
     return NextResponse.json(newProduct, { status: 201 });
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }

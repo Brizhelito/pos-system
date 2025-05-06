@@ -8,6 +8,7 @@ import {
 } from "../types/Products";
 import { prisma } from "../components/config/db";
 import { APIError } from "../lib/api/error";
+import { Prisma } from "@prisma";
 
 /**
  * ProductService - Maneja todas las operaciones relacionadas con productos
@@ -191,7 +192,7 @@ export class ProductService {
         await this.verifyProductExists(id);
 
         // Verificar dependencias
-        const salesWithProduct = await tx.saleItem.findFirst({
+        const salesWithProduct = await tx.saleitem.findFirst({
           where: { productId: id },
         });
 
@@ -283,18 +284,33 @@ export class ProductService {
    * @returns Lista de productos paginados con información de paginación
    * @throws APIError si ocurre un error durante la búsqueda
    */
-  async getProductsPaginated(page: number, pageSize: number, search: string = "") {
+  async getProductsPaginated(
+    page: number,
+    pageSize: number,
+    search: string = ""
+  ) {
     try {
       // Calcular el offset
       const skip = (page - 1) * pageSize;
 
-      // Preparar el filtro de búsqueda si existe
       const where = search
         ? {
             OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { description: { contains: search, mode: 'insensitive' } },
-              { barcode: { contains: search, mode: 'insensitive' } },
+              {
+                name: { contains: search, mode: Prisma.QueryMode.insensitive },
+              },
+              {
+                description: {
+                  contains: search,
+                  mode: Prisma.QueryMode.insensitive,
+                },
+              },
+              {
+                barcode: {
+                  contains: search,
+                  mode: Prisma.QueryMode.insensitive,
+                },
+              },
             ],
           }
         : {};

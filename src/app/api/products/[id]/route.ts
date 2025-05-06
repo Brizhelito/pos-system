@@ -24,15 +24,12 @@ export async function GET(
 
     // Verificar que el usuario esté autenticado
     if (!session.user) {
-      return NextResponse.json(
-        { message: "No autorizado" },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
     // Obtener ID del producto de los parámetros de ruta
     const productId = parseInt(params.id, 10);
-    
+
     if (isNaN(productId)) {
       return NextResponse.json(
         { message: "ID de producto inválido", code: "INVALID_PRODUCT_ID" },
@@ -42,18 +39,10 @@ export async function GET(
 
     // Obtener el producto por ID
     const product = await getProductById(productId);
-    
+
     return NextResponse.json(product);
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }
 
@@ -71,7 +60,7 @@ export async function PUT(
     );
 
     // Verificar que el usuario esté autenticado y tenga permisos de administrador
-    if (!session.user || session.user.role !== 'ADMIN') {
+    if (!session.user || session.user.role !== "ADMIN") {
       return NextResponse.json(
         { message: "No autorizado para actualizar productos" },
         { status: 403 }
@@ -80,7 +69,7 @@ export async function PUT(
 
     // Obtener ID del producto de los parámetros de ruta
     const productId = parseInt(params.id, 10);
-    
+
     if (isNaN(productId)) {
       return NextResponse.json(
         { message: "ID de producto inválido", code: "INVALID_PRODUCT_ID" },
@@ -90,30 +79,22 @@ export async function PUT(
 
     // Obtener datos del cuerpo de la solicitud
     const body = await req.json();
-    
+
     // Combinar ID de ruta con los datos del cuerpo
     const updateData = {
       ...body,
       id: productId, // Asegurar que el ID coincida con la ruta
     };
-    
+
     // Validar datos con Zod schema
     const validatedData = ProductUpdateSchema.parse(updateData);
-    
+
     // Actualizar producto usando el servicio
     const updatedProduct = await updateProductHandler(validatedData);
-    
+
     return NextResponse.json(updatedProduct);
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }
 
@@ -158,14 +139,6 @@ export async function DELETE(
       }
     );
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-    
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }

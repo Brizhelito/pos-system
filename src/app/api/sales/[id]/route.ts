@@ -46,18 +46,9 @@ export async function GET(
 
     return NextResponse.json(sale);
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }
-
 // PUT: Actualizar una venta (solo para administradores)
 export async function PUT(
   req: NextRequest,
@@ -96,15 +87,7 @@ export async function PUT(
 
     return NextResponse.json(updatedSale);
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }
 
@@ -140,14 +123,6 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    const apiErrorResponse = handleError(error);
-
-    return NextResponse.json(
-      {
-        message: apiErrorResponse.message,
-        code: apiErrorResponse.code,
-      },
-      { status: apiErrorResponse.statusCode }
-    );
+    return handleError(error);
   }
 }
