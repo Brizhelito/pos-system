@@ -7,17 +7,17 @@ import {
   updateProductHandler,
   deleteProductHandler,
 } from "@/services/ProductService";
-import { ProductUpdateSchema } from "@/types/Products";
+import { ProductUpdateSchema } from "@/types/Product";
 
 // GET: Obtener un producto específico por ID
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
-      req,
+      request,
       new Response(),
       sessionOptions
     );
@@ -28,7 +28,7 @@ export async function GET(
     }
 
     // Obtener ID del producto de los parámetros de ruta
-    const productId = parseInt(params.id, 10);
+    const productId = parseInt(context.params.id, 10);
 
     if (isNaN(productId)) {
       return NextResponse.json(
@@ -48,13 +48,13 @@ export async function GET(
 
 // PUT: Actualizar un producto existente
 export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
-      req,
+      request,
       new Response(),
       sessionOptions
     );
@@ -68,7 +68,7 @@ export async function PUT(
     }
 
     // Obtener ID del producto de los parámetros de ruta
-    const productId = parseInt(params.id, 10);
+    const productId = parseInt(context.params.id, 10);
 
     if (isNaN(productId)) {
       return NextResponse.json(
@@ -78,7 +78,7 @@ export async function PUT(
     }
 
     // Obtener datos del cuerpo de la solicitud
-    const body = await req.json();
+    const body = await request.json();
 
     // Combinar ID de ruta con los datos del cuerpo
     const updateData = {
@@ -100,19 +100,19 @@ export async function PUT(
 
 // DELETE: Eliminar un producto existente
 export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
-      req,
+      request,
       new Response(),
       sessionOptions
     );
 
     // Verificar que el usuario esté autenticado y tenga permisos de administrador
-    if (!session.user || session.user.role !== 'ADMIN') {
+    if (!session.user || session.user.role !== "ADMIN") {
       return NextResponse.json(
         { message: "No autorizado para eliminar productos" },
         { status: 403 }
@@ -120,8 +120,8 @@ export async function DELETE(
     }
 
     // Obtener ID del producto de los parámetros de ruta
-    const productId = parseInt(params.id, 10);
-    
+    const productId = parseInt(context.params.id, 10);
+
     if (isNaN(productId)) {
       return NextResponse.json(
         { message: "ID de producto inválido", code: "INVALID_PRODUCT_ID" },
@@ -131,13 +131,11 @@ export async function DELETE(
 
     // Eliminar producto usando el servicio
     const deletedProduct = await deleteProductHandler(productId);
-    
-    return NextResponse.json(
-      { 
-        message: "Producto eliminado correctamente",
-        product: deletedProduct 
-      }
-    );
+
+    return NextResponse.json({
+      message: "Producto eliminado correctamente",
+      product: deletedProduct,
+    });
   } catch (error) {
     return handleError(error);
   }

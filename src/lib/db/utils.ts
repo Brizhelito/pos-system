@@ -10,5 +10,8 @@ export const parseId = (id: string | number): number => {
  */
 export const handleDbError = (error: unknown): Error => {
   console.error("Database error:", error);
+  if (error instanceof Error) {
+    return error;
+  }
   return new Error("Ocurrió un error al acceder a la base de datos");
 };

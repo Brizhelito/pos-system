@@ -383,6 +383,9 @@ export class ProductService {
       throw new APIError("Datos inválidos", 400, "INVALID_DATA");
     } else if (error instanceof APIError) {
       throw error;
+    } else if (error instanceof Error) {
+      console.error("Error:", error);
+      throw new APIError(error.message, 500, defaultCode);
     } else {
       console.error("Error:", error);
       throw new APIError(defaultMessage, 500, defaultCode);

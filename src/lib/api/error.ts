@@ -31,9 +31,11 @@ export const handleError = (error: unknown) => {
   }
 
   console.error("Unhandled error:", error);
+  const errorMessage =
+    error instanceof Error ? error.message : "Internal Server Error";
   return NextResponse.json(
     {
-      message: "Internal Server Error",
+      message: errorMessage,
       code: "INTERNAL_SERVER_ERROR",
     },
     { status: 500 }

@@ -9,81 +9,88 @@ import {
 } from "@/services/SaleService";
 import { SaleUpdateSchema } from "@/types/Sale";
 
-// GET: Obtener una venta por ID (solo para administradores)
+// GET: Obtener una venta específica por ID
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
-      req,
+      request,
       new Response(),
       sessionOptions
     );
 
-    // Verificar que el usuario esté autenticado y sea administrador
-    if (!session.user || session.user.role !== "ADMIN") {
+    // Verificar que el usuario esté autenticado
+    if (!session.user) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    }
+
+    // Obtener ID de la venta de los parámetros de ruta
+    const saleId = parseInt(context.params.id, 10);
+
+    if (isNaN(saleId)) {
       return NextResponse.json(
-        { message: "No autorizado. Se requiere rol de administrador" },
-        { status: 403 }
+        { message: "ID de venta inválido", code: "INVALID_SALE_ID" },
+        { status: 400 }
       );
     }
 
-    // Obtener ID de la venta
-    const id = parseInt(params.id);
-
-    // Obtener venta por ID
-    const sale = await getSaleById(id);
-
-    // Verificar que la venta existe
-    if (!sale) {
-      return NextResponse.json(
-        { message: "Venta no encontrada" },
-        { status: 404 }
-      );
-    }
+    // Obtener la venta por ID
+    const sale = await getSaleById(saleId);
 
     return NextResponse.json(sale);
   } catch (error) {
     return handleError(error);
   }
 }
-// PUT: Actualizar una venta (solo para administradores)
+
+// PUT: Actualizar una venta existente
 export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
-      req,
+      request,
       new Response(),
       sessionOptions
     );
 
-    // Verificar que el usuario esté autenticado y sea administrador
+    // Verificar que el usuario esté autenticado y tenga permisos de administrador
     if (!session.user || session.user.role !== "ADMIN") {
       return NextResponse.json(
-        { message: "No autorizado. Se requiere rol de administrador" },
+        { message: "No autorizado para actualizar ventas" },
         { status: 403 }
       );
     }
 
-    // Obtener ID de la venta
-    const id = parseInt(params.id);
+    // Obtener ID de la venta de los parámetros de ruta
+    const saleId = parseInt(context.params.id, 10);
+
+    if (isNaN(saleId)) {
+      return NextResponse.json(
+        { message: "ID de venta inválido", code: "INVALID_SALE_ID" },
+        { status: 400 }
+      );
+    }
 
     // Obtener datos del cuerpo de la solicitud
-    const body = await req.json();
+    const body = await request.json();
+
+    // Combinar ID de ruta con los datos del cuerpo
+    const updateData = {
+      ...body,
+      id: saleId, // Asegurar que el ID coincida con la ruta
+    };
 
     // Validar datos con Zod schema
-    const validatedData = SaleUpdateSchema.parse(body);
+    const validatedData = SaleUpdateSchema.parse(updateData);
 
     // Actualizar venta usando el servicio
-    const updatedSale = await updateSaleHandler({
-      id,
-      ...validatedData,
-    });
+    const updatedSale = await updateSaleHandler(validatedData);
 
     return NextResponse.json(updatedSale);
   } catch (error) {
@@ -91,37 +98,44 @@ export async function PUT(
   }
 }
 
-// DELETE: Eliminar una venta (solo para administradores)
+// DELETE: Eliminar una venta existente
 export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
-      req,
+      request,
       new Response(),
       sessionOptions
     );
 
-    // Verificar que el usuario esté autenticado y sea administrador
+    // Verificar que el usuario esté autenticado y tenga permisos de administrador
     if (!session.user || session.user.role !== "ADMIN") {
       return NextResponse.json(
-        { message: "No autorizado. Se requiere rol de administrador" },
+        { message: "No autorizado para eliminar ventas" },
         { status: 403 }
       );
     }
 
-    // Obtener ID de la venta
-    const id = parseInt(params.id);
+    // Obtener ID de la venta de los parámetros de ruta
+    const saleId = parseInt(context.params.id, 10);
+
+    if (isNaN(saleId)) {
+      return NextResponse.json(
+        { message: "ID de venta inválido", code: "INVALID_SALE_ID" },
+        { status: 400 }
+      );
+    }
 
     // Eliminar venta usando el servicio
-    await deleteSaleHandler(id);
+    const deletedSale = await deleteSaleHandler(saleId);
 
-    return NextResponse.json(
-      { message: "Venta eliminada correctamente" },
-      { status: 200 }
-    );
+    return NextResponse.json({
+      message: "Venta eliminada correctamente",
+      sale: deletedSale,
+    });
   } catch (error) {
     return handleError(error);
   }

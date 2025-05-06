@@ -3,7 +3,41 @@ import { getIronSession, IronSessionData } from "iron-session";
 import { sessionOptions } from "@/lib/auth/auth";
 import { handleError } from "@/lib/api/error";
 import { createSaleHandler, getSales } from "@/services/SaleService";
-import { SaleCreateSchema } from "@/types/Sale";
+import { SaleCreateSchema, SaleFilters } from "@/types/Sale";
+import { z } from "zod";
+
+// Schema para validar los filtros
+const SaleFiltersSchema = z
+  .object({
+    customerId: z.string().optional(),
+    startDate: z.date().optional(),
+    endDate: z.date().optional(),
+    minTotal: z.number().positive().optional(),
+    maxTotal: z.number().positive().optional(),
+    status: z.enum(["PENDING", "COMPLETED", "CANCELLED"]).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return data.startDate <= data.endDate;
+      }
+      return true;
+    },
+    {
+      message: "La fecha de inicio debe ser anterior a la fecha de fin",
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.minTotal && data.maxTotal) {
+        return data.minTotal <= data.maxTotal;
+      }
+      return true;
+    },
+    {
+      message: "El total mínimo debe ser menor o igual al total máximo",
+    }
+  );
 
 // GET: Obtener todas las ventas (solo para administradores)
 export async function GET(req: NextRequest) {
@@ -23,8 +57,84 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    const { searchParams } = new URL(req.url);
+
+    // Extraer filtros de los parámetros de búsqueda
+    const filters: SaleFilters = {};
+
+    if (searchParams.has("customerId"))
+      filters.customerId = searchParams.get("customerId") as string;
+
+    if (searchParams.has("startDate")) {
+      const startDate = new Date(searchParams.get("startDate") as string);
+      if (isNaN(startDate.getTime())) {
+        return NextResponse.json(
+          { error: "Fecha de inicio inválida" },
+          { status: 400 }
+        );
+      }
+      filters.startDate = startDate;
+    }
+
+    if (searchParams.has("endDate")) {
+      const endDate = new Date(searchParams.get("endDate") as string);
+      if (isNaN(endDate.getTime())) {
+        return NextResponse.json(
+          { error: "Fecha de fin inválida" },
+          { status: 400 }
+        );
+      }
+      filters.endDate = endDate;
+    }
+
+    if (searchParams.has("minTotal")) {
+      const minTotal = parseFloat(searchParams.get("minTotal") as string);
+      if (isNaN(minTotal) || minTotal < 0) {
+        return NextResponse.json(
+          { error: "Total mínimo inválido" },
+          { status: 400 }
+        );
+      }
+      filters.minTotal = minTotal;
+    }
+
+    if (searchParams.has("maxTotal")) {
+      const maxTotal = parseFloat(searchParams.get("maxTotal") as string);
+      if (isNaN(maxTotal) || maxTotal < 0) {
+        return NextResponse.json(
+          { error: "Total máximo inválido" },
+          { status: 400 }
+        );
+      }
+      filters.maxTotal = maxTotal;
+    }
+
+    if (searchParams.has("status")) {
+      const status = searchParams.get("status") as
+        | "PENDING"
+        | "COMPLETED"
+        | "CANCELLED";
+      if (!["PENDING", "COMPLETED", "CANCELLED"].includes(status)) {
+        return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
+      }
+      filters.status = status;
+    }
+
+    // Validar los filtros con Zod
+    try {
+      SaleFiltersSchema.parse(filters);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          { error: error.errors[0].message },
+          { status: 400 }
+        );
+      }
+      throw error;
+    }
+    
     // Obtener todas las ventas
-    const sales = await getSales();
+    const sales = await getSales(filters);
 
     return NextResponse.json(sales);
   } catch (error) {
