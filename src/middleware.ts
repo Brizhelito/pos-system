@@ -14,8 +14,8 @@ const LOGIN_PATH = "/login";
 // Ruta a la que se redirige cuando el acceso es no autorizado o prohibido
 const UNAUTHORIZED_PATH = "/unauthorized";
 // Dashboards específicos por rol
-const ADMIN_DASHBOARD_PATH = "/admin/dashboard";
-const SELLER_DASHBOARD_PATH = "/seller/dashboard";
+const ADMIN_DASHBOARD_PATH = "/admin";
+const SELLER_DASHBOARD_PATH = "/seller/sales";
 // Ruta genérica de dashboard que redirige al específico
 const GENERIC_DASHBOARD_PATH = "/dashboard";
 
