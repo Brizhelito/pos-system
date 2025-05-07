@@ -39,7 +39,7 @@ const initialState: SalesState = {
   currentStep: 0,
   selectedCustomer: null,
   cartItems: [],
-  paymentMethod: $Enums.sale_paymentMethod.CASH,
+  paymentMethod: $Enums.sale_paymentMethod.EFECTIVO,
   isCompleted: false,
 };
 

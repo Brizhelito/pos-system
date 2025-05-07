@@ -867,3 +867,4 @@ const SaleContainer = () => {
 };
 
 export default SaleContainer;
+ 

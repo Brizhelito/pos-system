@@ -3,18 +3,19 @@ import { getIronSession, IronSessionData } from "iron-session";
 import { sessionOptions } from "@/lib/auth/auth";
 import { handleError } from "@/lib/api/error";
 import { createSaleHandler, getSales } from "@/services/SaleService";
-import { SaleCreateSchema, SaleFilters } from "@/types/Sale";
+import { SaleCreateSchema } from "@/types/Sale";
 import { z } from "zod";
+import { SaleFilters } from "@/types/sales";
 
 // Schema para validar los filtros
 const SaleFiltersSchema = z
   .object({
-    customerId: z.string().optional(),
+    customerId: z.number().positive().optional(),
     startDate: z.date().optional(),
     endDate: z.date().optional(),
-    minTotal: z.number().positive().optional(),
-    maxTotal: z.number().positive().optional(),
-    status: z.enum(["PENDING", "COMPLETED", "CANCELLED"]).optional(),
+    saleStatus: z.enum(["PENDING", "COMPLETED", "CANCELLED"]).optional(),
+    userId: z.number().positive().optional(),
+    paymentMethod: z.enum(["CASH", "CARD", "TRANSFER", "OTHER"]).optional(),
   })
   .refine(
     (data) => {
@@ -25,17 +26,6 @@ const SaleFiltersSchema = z
     },
     {
       message: "La fecha de inicio debe ser anterior a la fecha de fin",
-    }
-  )
-  .refine(
-    (data) => {
-      if (data.minTotal && data.maxTotal) {
-        return data.minTotal <= data.maxTotal;
-      }
-      return true;
-    },
-    {
-      message: "El total mínimo debe ser menor o igual al total máximo",
     }
   );
 
@@ -63,7 +53,10 @@ export async function GET(req: NextRequest) {
     const filters: SaleFilters = {};
 
     if (searchParams.has("customerId"))
-      filters.customerId = searchParams.get("customerId") as string;
+      filters.customerId = parseInt(
+        searchParams.get("customerId") as string,
+        10
+      );
 
     if (searchParams.has("startDate")) {
       const startDate = new Date(searchParams.get("startDate") as string);
@@ -95,7 +88,6 @@ export async function GET(req: NextRequest) {
           { status: 400 }
         );
       }
-      filters.minTotal = minTotal;
     }
 
     if (searchParams.has("maxTotal")) {
@@ -106,7 +98,6 @@ export async function GET(req: NextRequest) {
           { status: 400 }
         );
       }
-      filters.maxTotal = maxTotal;
     }
 
     if (searchParams.has("status")) {
@@ -117,7 +108,7 @@ export async function GET(req: NextRequest) {
       if (!["PENDING", "COMPLETED", "CANCELLED"].includes(status)) {
         return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
       }
-      filters.status = status;
+      filters.saleStatus = status;
     }
 
     // Validar los filtros con Zod
@@ -132,8 +123,8 @@ export async function GET(req: NextRequest) {
       }
       throw error;
     }
-    
-    // Obtener todas las ventas
+
+    // Obtener todas las ventas con filtros
     const sales = await getSales(filters);
 
     return NextResponse.json(sales);

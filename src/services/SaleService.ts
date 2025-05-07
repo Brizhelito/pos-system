@@ -8,7 +8,8 @@ import {
 } from "../types/Sale";
 import { prisma } from "../components/config/db";
 import { APIError } from "../lib/api/error";
-import { $Enums } from "@prisma";
+import { $Enums, Prisma } from "@prisma";
+import { SaleFilters } from "../types/sales";
 
 /**
  * SaleService - Maneja todas las operaciones relacionadas con ventas
@@ -150,9 +151,43 @@ export class SaleService {
    * @returns Lista de ventas ordenadas por fecha
    * @throws APIError si ocurre un error al obtener las ventas
    */
-  async getSales() {
+  async getSales(filters?: SaleFilters) {
     try {
+      // Construir where basado en filtros
+      const where: Prisma.saleWhereInput = {};
+
+      if (filters) {
+        if (filters.customerId) {
+          where.customerId = filters.customerId;
+        }
+        if (filters.userId) {
+          where.userId = filters.userId;
+        }
+        if (filters.saleStatus) {
+          where.status = filters.saleStatus as $Enums.sale_status;
+        }
+        if (filters.paymentMethod) {
+          where.paymentMethod =
+            filters.paymentMethod as $Enums.sale_paymentMethod;
+        }
+        if (filters.startDate && filters.endDate) {
+          where.saleDate = {
+            gte: filters.startDate,
+            lte: filters.endDate,
+          };
+        } else if (filters.startDate) {
+          where.saleDate = {
+            gte: filters.startDate,
+          };
+        } else if (filters.endDate) {
+          where.saleDate = {
+            lte: filters.endDate,
+          };
+        }
+      }
+
       const sales = await prisma.sale.findMany({
+        where,
         include: {
           saleitem: true,
           customer: true,
@@ -441,15 +476,19 @@ const saleService = new SaleService();
 export const createSaleHandler = async (data: SaleCreate) => {
   return await saleService.createSale(data);
 };
-export const getSales = async () => {
-  return await saleService.getSales();
+
+export const getSales = async (filters?: SaleFilters) => {
+  return await saleService.getSales(filters);
 };
+
 export const getSaleById = async (id: number) => {
   return await saleService.getSaleById(id);
 };
+
 export const updateSaleHandler = async (data: SaleUpdate & { id: number }) => {
   return await saleService.updateSale(data);
 };
+
 export const deleteSaleHandler = async (id: number) => {
   return await saleService.deleteSale(id);
 };

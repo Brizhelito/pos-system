@@ -12,8 +12,9 @@ import { SaleUpdateSchema } from "@/types/Sale";
 // GET: Obtener una venta específica por ID
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
@@ -28,7 +29,7 @@ export async function GET(
     }
 
     // Obtener ID de la venta de los parámetros de ruta
-    const saleId = parseInt(context.params.id, 10);
+    const saleId = parseInt(id, 10);
 
     if (isNaN(saleId)) {
       return NextResponse.json(
@@ -49,8 +50,9 @@ export async function GET(
 // PUT: Actualizar una venta existente
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
@@ -68,7 +70,7 @@ export async function PUT(
     }
 
     // Obtener ID de la venta de los parámetros de ruta
-    const saleId = parseInt(context.params.id, 10);
+    const saleId = parseInt(id, 10);
 
     if (isNaN(saleId)) {
       return NextResponse.json(
@@ -101,8 +103,9 @@ export async function PUT(
 // DELETE: Eliminar una venta existente
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
@@ -120,7 +123,7 @@ export async function DELETE(
     }
 
     // Obtener ID de la venta de los parámetros de ruta
-    const saleId = parseInt(context.params.id, 10);
+    const saleId = parseInt(id, 10);
 
     if (isNaN(saleId)) {
       return NextResponse.json(
