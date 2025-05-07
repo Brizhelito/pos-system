@@ -340,12 +340,12 @@ const ProductSearch = ({ onAddToCart, inputRef }: ProductSearchProps) => {
   };
 
   return (
-    <div className="product-search">
-      <div className="flex items-center space-x-2 mb-3">
+    <div className="product-search flex flex-col h-full w-full">
+      <div className="flex items-center gap-1.5 mb-2">
         <input
           ref={effectiveInputRef}
           type="text"
-          className="border dark:border-gray-600 dark:bg-gray-800 rounded p-2 flex-1"
+          className="border dark:border-gray-600 dark:bg-gray-800 rounded p-1.5 flex-1 min-w-0 text-xs lg:text-sm"
           value={searchTerm}
           onChange={handleSearchInputChange}
           onKeyDown={handleInputKeyDown}
@@ -356,19 +356,22 @@ const ProductSearch = ({ onAddToCart, inputRef }: ProductSearchProps) => {
         />
 
         <button
-          className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+          className="bg-blue-600 dark:bg-blue-700 text-white px-2 py-1.5 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-xs lg:text-sm whitespace-nowrap"
           onClick={searchProducts}
           disabled={loading}
           aria-label="Buscar productos"
         >
-          {loading ? "Buscando..." : "Buscar"}
+          <span className="hidden sm:inline">
+            {loading ? "Buscando..." : "Buscar"}
+          </span>
+          <span className="sm:hidden">🔍</span>
         </button>
       </div>
 
       {products.length > 0 && (
         <div
           ref={productListRef}
-          className="product-list mb-4 max-h-40 overflow-y-auto border dark:border-gray-700 rounded"
+          className="product-list mb-2 flex-1 overflow-y-auto border dark:border-gray-700 rounded"
           role="listbox"
           aria-label="Lista de productos"
           onFocus={() => setIsNavigating(true)}
@@ -379,7 +382,7 @@ const ProductSearch = ({ onAddToCart, inputRef }: ProductSearchProps) => {
               ref={(el) => {
                 productRefs.current[index] = el;
               }}
-              className={`p-2 cursor-pointer border-b dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all ${
+              className={`p-1.5 cursor-pointer border-b dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all ${
                 selectedIndex === index
                   ? "bg-blue-100 dark:bg-blue-900/50 outline-none ring-2 ring-blue-500 transform scale-[1.01]"
                   : ""
@@ -389,7 +392,6 @@ const ProductSearch = ({ onAddToCart, inputRef }: ProductSearchProps) => {
               aria-selected={selectedIndex === index}
               tabIndex={0}
               onKeyDown={(e) => {
-                // Solo manejamos Enter y ArrowRight en los elementos de la lista
                 if (e.key === "Enter" || e.key === "ArrowRight") {
                   e.preventDefault();
                   handleSelectProduct(product, index);
@@ -400,19 +402,21 @@ const ProductSearch = ({ onAddToCart, inputRef }: ProductSearchProps) => {
                 setIsNavigating(true);
               }}
             >
-              <div className="flex justify-between">
-                <div>
-                  <p className="font-medium">{product.name}</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
+              <div className="flex justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-xs lg:text-sm truncate">
+                    {product.name}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
                     {product.description}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold">
+                <div className="text-right shrink-0">
+                  <p className="font-bold text-xs lg:text-sm whitespace-nowrap">
                     ${product.sellingPrice.toFixed(2)}
                   </p>
                   <p
-                    className={`text-xs ${
+                    className={`text-xs whitespace-nowrap ${
                       product.stock > 0
                         ? "text-green-600 dark:text-green-400"
                         : "text-red-600 dark:text-red-400"
@@ -428,71 +432,74 @@ const ProductSearch = ({ onAddToCart, inputRef }: ProductSearchProps) => {
       )}
 
       {selectedProduct && (
-        <div className="add-to-cart flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 bg-blue-50 dark:bg-blue-900/20 p-2 rounded border dark:border-gray-700 transition-all animate-fadeIn">
-          <div className="flex-1">
-            <p className="font-bold">{selectedProduct.name}</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="add-to-cart flex flex-col sm:flex-row items-center gap-2 bg-blue-50 dark:bg-blue-900/20 p-2 rounded border dark:border-gray-700 transition-all animate-fadeIn">
+          <div className="min-w-0 flex-1">
+            <p className="font-bold text-xs lg:text-sm truncate">
+              {selectedProduct.name}
+            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
               ${selectedProduct.sellingPrice.toFixed(2)} c/u
             </p>
           </div>
 
-          <input
-            type="number"
-            ref={quantityInputRef}
-            className="border dark:border-gray-600 dark:bg-gray-800 rounded p-2 w-20"
-            value={quantity}
-            onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
-            min="1"
-            max={selectedProduct.stock}
-            aria-label="Cantidad"
-            onKeyDown={(e) => {
-              // Atajo para volver a la lista o confirmar
-              if (e.key === "ArrowLeft") {
-                e.preventDefault();
-                const event = new KeyboardEvent("keydown", { key: "left" });
-                window.dispatchEvent(event);
-              } else if (e.key === "Enter") {
-                e.preventDefault();
-                handleAddToCart();
-              }
-            }}
-          />
-
-          <div className="flex flex-col space-y-2">
-            <button
-              ref={addButtonRef}
-              className="bg-green-600 dark:bg-green-700 text-white px-4 py-2 rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors flex items-center"
-              onClick={handleAddToCart}
-              aria-label="Agregar al carrito"
-            >
-              <span className="mr-1">Agregar</span>
-              <kbd className="px-1 bg-green-700 dark:bg-green-800 text-xs rounded">
-                Alt+A
-              </kbd>
-            </button>
-
-            <button
-              className="text-red-500 dark:text-red-400 border border-red-300 dark:border-red-700 px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center text-sm"
-              onClick={() => {
-                setSelectedProduct(null);
-                setQuantity(1);
-                setSelectedIndex(-1);
-                effectiveInputRef.current?.focus();
-                toast.info("Producto deseleccionado");
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              ref={quantityInputRef}
+              className="border dark:border-gray-600 dark:bg-gray-800 rounded p-1.5 w-16 text-xs lg:text-sm"
+              value={quantity}
+              onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
+              min="1"
+              max={selectedProduct.stock}
+              aria-label="Cantidad"
+              onKeyDown={(e) => {
+                if (e.key === "ArrowLeft") {
+                  e.preventDefault();
+                  const event = new KeyboardEvent("keydown", { key: "left" });
+                  window.dispatchEvent(event);
+                } else if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddToCart();
+                }
               }}
-              aria-label="Cancelar selección"
-            >
-              <span className="mr-1">Cancelar</span>
-              <kbd className="px-1 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-xs rounded">
-                Alt+X
-              </kbd>
-            </button>
+            />
+
+            <div className="flex flex-col sm:flex-row gap-1">
+              <button
+                ref={addButtonRef}
+                className="bg-green-600 dark:bg-green-700 text-white px-2 py-1 rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors flex items-center text-xs lg:text-sm whitespace-nowrap"
+                onClick={handleAddToCart}
+                aria-label="Agregar al carrito"
+              >
+                <span className="mr-1">Agregar</span>
+                <kbd className="hidden lg:inline-block px-1 bg-green-700 dark:bg-green-800 text-xs rounded">
+                  Alt+A
+                </kbd>
+              </button>
+
+              <button
+                className="text-red-500 dark:text-red-400 border border-red-300 dark:border-red-700 px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center text-xs lg:text-sm whitespace-nowrap"
+                onClick={() => {
+                  setSelectedProduct(null);
+                  setQuantity(1);
+                  setSelectedIndex(-1);
+                  effectiveInputRef.current?.focus();
+                  toast.info("Producto deseleccionado");
+                }}
+                aria-label="Cancelar selección"
+              >
+                <span className="mr-1">Cancelar</span>
+                <kbd className="hidden lg:inline-block px-1 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-xs rounded">
+                  Alt+X
+                </kbd>
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {products.length > 0 && !selectedProduct && (
-        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        <div className="text-xs text-gray-500 dark:text-gray-400 hidden lg:block">
           <p>
             Usa{" "}
             <kbd className="px-1 bg-gray-200 dark:bg-gray-700 rounded">↑</kbd>{" "}
@@ -508,7 +515,7 @@ const ProductSearch = ({ onAddToCart, inputRef }: ProductSearchProps) => {
       )}
 
       {selectedProduct && (
-        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        <div className="text-xs text-gray-500 dark:text-gray-400 hidden lg:block">
           <p>
             <kbd className="px-1 bg-gray-200 dark:bg-gray-700 rounded">
               Alt+↑

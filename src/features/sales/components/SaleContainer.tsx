@@ -613,8 +613,8 @@ const SaleContainer = () => {
           </div>
         </div>
 
-        {/* Sección Izquierda: Selección de cliente y búsqueda de productos */}
-        <div className="lg:col-span-4 xl:col-span-5 border-b lg:border-b-0 lg:border-r p-4 overflow-auto flex flex-col h-[40vh] lg:h-screen">
+        {/* Sección Izquierda: Selección de cliente y búsqueda de productos (25%) */}
+        <div className="lg:col-span-3 border-b lg:border-b-0 lg:border-r p-4 overflow-auto flex flex-col h-[45vh] lg:h-screen">
           <div className="customer-selection mb-4">
             <h2 className="text-lg font-semibold mb-2 flex items-center text-foreground">
               <span className="mr-2 bg-primary/10 text-primary px-2 py-1 rounded text-xs">
@@ -642,8 +642,8 @@ const SaleContainer = () => {
           </div>
         </div>
 
-        {/* Sección Central: Carrito actual */}
-        <div className="lg:col-span-4 xl:col-span-4 border-b lg:border-b-0 lg:border-r p-4 overflow-auto h-[40vh] lg:h-screen">
+        {/* Sección Central: Carrito actual (50%) */}
+        <div className="lg:col-span-6 border-b lg:border-b-0 lg:border-r p-4 overflow-auto h-[35vh] lg:h-screen">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-lg font-semibold text-foreground">
               Carrito de Compras
@@ -680,8 +680,8 @@ const SaleContainer = () => {
           />
         </div>
 
-        {/* Sección Derecha: Resumen y pago */}
-        <div className="lg:col-span-4 xl:col-span-3 p-4 overflow-auto flex flex-col h-[20vh] lg:h-screen">
+        {/* Sección Derecha: Resumen y pago (25%) */}
+        <div className="lg:col-span-3 p-4 overflow-auto flex flex-col h-[20vh] lg:h-screen">
           <h2 className="text-lg font-semibold mb-2 text-foreground">
             Resumen de Venta
           </h2>

@@ -87,7 +87,6 @@ const CustomerSearch = ({
     }
 
     setLoading(true);
-    setHasSearched(true);
     setSearchInProgress(true);
 
     try {
@@ -111,18 +110,19 @@ const CustomerSearch = ({
         console.log("Cliente encontrado:", data.customer.name);
         setCustomer(data.customer);
         onCustomerSelect(data.customer);
-        // Toast removido para evitar duplicación con el mensaje en SaleContainer
+        setHasSearched(false);
       } else {
         setCustomer(null);
+        setHasSearched(true);
         toast.info("Cliente no encontrado. Puede crear uno nuevo.");
-        // El foco se moverá al botón de crear cliente gracias al useEffect
       }
     } catch (error) {
       console.error("Error al buscar cliente:", error);
       toast.error("Error al buscar cliente");
+      setCustomer(null);
+      setHasSearched(true);
     } finally {
       setLoading(false);
-      // Dar un tiempo antes de permitir otra búsqueda
       setTimeout(() => {
         setSearchInProgress(false);
       }, 500);
@@ -160,16 +160,17 @@ const CustomerSearch = ({
 
   // Restablecer el estado de búsqueda al cambiar el idNumber
   useEffect(() => {
-    if (hasSearched) {
+    if (hasSearched && customer) {
       setHasSearched(false);
+      setCustomer(null);
     }
-  }, [idNumber, hasSearched]);
+  }, [idNumber, hasSearched, customer]);
 
   return (
-    <div className="customer-search">
-      <div className="flex items-center space-x-2 mb-3">
+    <div className="customer-search w-full">
+      <div className="flex items-center gap-1.5 mb-2">
         <select
-          className="border dark:border-gray-600 dark:bg-gray-800 rounded p-2 w-1/3"
+          className="border dark:border-gray-600 dark:bg-gray-800 rounded p-1.5 w-[4.5rem] text-xs lg:text-sm"
           value={idType}
           onChange={(e) => setIdType(e.target.value as IdType)}
           aria-label="Tipo de documento"
@@ -184,7 +185,7 @@ const CustomerSearch = ({
         <input
           ref={effectiveInputRef}
           type="text"
-          className="border dark:border-gray-600 dark:bg-gray-800 rounded p-2 flex-1"
+          className="border dark:border-gray-600 dark:bg-gray-800 rounded p-1.5 flex-1 min-w-0 text-xs lg:text-sm"
           value={idNumber}
           onChange={(e) => setIdNumber(e.target.value)}
           onKeyPress={handleKeyPress}
@@ -193,29 +194,34 @@ const CustomerSearch = ({
         />
 
         <button
-          className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center"
+          className="bg-blue-600 dark:bg-blue-700 text-white px-2 py-1.5 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center text-xs lg:text-sm whitespace-nowrap"
           onClick={searchCustomer}
           disabled={loading}
           aria-label="Buscar cliente"
         >
-          <span className="mr-1">{loading ? "Buscando..." : "Buscar"}</span>
-          <kbd className="px-1 bg-blue-700 dark:bg-blue-800 text-xs rounded">
+          <span className="hidden sm:inline mr-1">
+            {loading ? "Buscando..." : "Buscar"}
+          </span>
+          <span className="sm:hidden">🔍</span>
+          <kbd className="hidden lg:inline-block px-1 bg-blue-700 dark:bg-blue-800 text-xs rounded ml-1">
             Enter
           </kbd>
         </button>
       </div>
 
       {!customer && idNumber && !loading && hasSearched && (
-        <div className="create-customer border dark:border-gray-700 rounded p-3 bg-yellow-50 dark:bg-yellow-900/30">
-          <p className="mb-2 dark:text-yellow-200">Cliente no encontrado</p>
+        <div className="create-customer border dark:border-gray-700 rounded p-2 bg-yellow-50 dark:bg-yellow-900/30">
+          <p className="mb-1 dark:text-yellow-200 text-xs lg:text-sm">
+            Cliente no encontrado
+          </p>
           <button
             ref={createButtonRef}
-            className="bg-green-600 dark:bg-green-700 text-white px-3 py-1 rounded text-sm hover:bg-green-700 dark:hover:bg-green-600 transition-colors flex items-center"
+            className="bg-green-600 dark:bg-green-700 text-white px-2 py-1 rounded text-xs lg:text-sm hover:bg-green-700 dark:hover:bg-green-600 transition-colors flex items-center"
             onClick={handleOpenCreateModal}
             aria-label="Crear nuevo cliente"
           >
             <span className="mr-1">Crear Nuevo Cliente</span>
-            <kbd className="px-1 bg-green-700 dark:bg-green-800 text-xs rounded">
+            <kbd className="hidden lg:inline-block px-1 bg-green-700 dark:bg-green-800 text-xs rounded">
               Alt+N
             </kbd>
           </button>
@@ -223,7 +229,7 @@ const CustomerSearch = ({
       )}
 
       {idNumber && !hasSearched && (
-        <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           Presiona{" "}
           <kbd className="px-1 bg-gray-200 dark:bg-gray-700 rounded">Enter</kbd>{" "}
           para buscar
@@ -231,26 +237,28 @@ const CustomerSearch = ({
       )}
 
       {customer && (
-        <div className="customer-info border dark:border-gray-700 rounded p-3 bg-gray-50 dark:bg-gray-800">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-bold">{customer.name}</h3>
-              <p className="text-sm">
+        <div className="customer-info border dark:border-gray-700 rounded p-2 bg-gray-50 dark:bg-gray-800">
+          <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <h3 className="font-bold text-xs lg:text-sm truncate">
+                {customer.name}
+              </h3>
+              <p className="text-xs truncate">
                 {customer.idType}: {customer.idNumber}
               </p>
               {customer.phone && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
                   Teléfono: {customer.phone}
                 </p>
               )}
               {customer.email && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
                   Email: {customer.email}
                 </p>
               )}
             </div>
             <button
-              className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 flex items-center"
+              className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 flex items-center shrink-0"
               onClick={() => {
                 setCustomer(null);
                 setIdNumber("");
@@ -259,12 +267,12 @@ const CustomerSearch = ({
               }}
               aria-label="Eliminar cliente seleccionado"
             >
-              <kbd className="mr-1 px-1 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-xs rounded">
+              <kbd className="hidden lg:inline-block mr-1 px-1 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-xs rounded">
                 Alt+C
               </kbd>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
+                className="h-4 w-4"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -292,3 +300,4 @@ const CustomerSearch = ({
 };
 
 export default CustomerSearch;
+ 

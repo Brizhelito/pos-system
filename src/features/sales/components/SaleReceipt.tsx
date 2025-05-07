@@ -318,3 +318,4 @@ const SaleReceipt = ({
 };
 
 export default SaleReceipt;
+ 
