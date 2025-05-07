@@ -1,4 +1,4 @@
-import { PrismaClient } from "../../../lib/prisma-client";
+import { PrismaClient } from "@prisma";
 
 // Exportamos la instancia única de PrismaClient para ser usada en toda la aplicación
 export const prisma = new PrismaClient();

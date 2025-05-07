@@ -4,7 +4,7 @@ import {
   IronSession,
   IronSessionData,
 } from "iron-session";
-import { user } from "../../../lib/prisma-client";
+import { user } from "@prisma";
 import { NextApiRequest, NextApiResponse } from "next";
 export const sessionOptions: SessionOptions = {
   password:

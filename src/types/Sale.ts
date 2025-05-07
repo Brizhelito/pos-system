@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { $Enums } from "../../lib/prisma-client";
+import { $Enums } from "@prisma";
 
 // --- Sale Item Schema ---
 export const SaleItemSchema = z.object({
@@ -24,7 +24,9 @@ export const SaleBaseSchema = z
 export const SaleCreateSchema = SaleBaseSchema;
 
 // --- Update Schema ---
-export const SaleUpdateSchema = SaleBaseSchema.partial();
+export const SaleUpdateSchema = SaleBaseSchema.extend({
+  id: z.number().int().positive(),
+});
 
 // --- Full Sale Schema ---
 export const SaleSchema = SaleBaseSchema.extend({

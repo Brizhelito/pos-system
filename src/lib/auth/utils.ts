@@ -1,5 +1,5 @@
 import { NextApiRequest } from "next";
-import { User } from "../../../lib/prisma-client";
+import { user } from "@prisma";
 import { createError } from "../api/error";
 
 export const requireAuth = async (req: NextApiRequest) => {
@@ -9,7 +9,7 @@ export const requireAuth = async (req: NextApiRequest) => {
   return req.session.user;
 };
 
-export const login = async (req: NextApiRequest, user: User) => {
+export const login = async (req: NextApiRequest, user: user) => {
   req.session.user = user;
   await req.session.save();
 };
@@ -18,6 +18,6 @@ export const logout = async (req: NextApiRequest) => {
   req.session.destroy();
 };
 
-export const getCurrentUser = (req: NextApiRequest): User | null => {
+export const getCurrentUser = (req: NextApiRequest): user | null => {
   return req.session.user || null;
 };

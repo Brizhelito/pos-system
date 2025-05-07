@@ -23,7 +23,9 @@ export const CustomerBaseSchema = z.object({
 export const CustomerCreateSchema = CustomerBaseSchema;
 
 // --- Update Schema ---
-export const CustomerUpdateSchema = CustomerBaseSchema.partial();
+export const CustomerUpdateSchema = CustomerBaseSchema.extend({
+  id: z.number().int().positive(),
+});
 
 // --- Full Customer Schema ---
 export const CustomerSchema = CustomerBaseSchema.extend({
@@ -64,17 +66,49 @@ export type CustomerFilters = z.infer<typeof CustomerFiltersSchema>;
 
 // --- Customer Summary Schema ---
 export const CustomerSummarySchema = z.object({
-  totalCustomers: z.number().int().positive(),
-  totalSales: z.number().positive(),
-  averageSalesPerCustomer: z.number().positive(),
-  topCustomers: z.array(
+  totalCustomers: z.number().int().nonnegative(),
+  customersWithMostPurchases: z.array(
     z.object({
       id: z.number().int().positive(),
       name: z.string(),
-      totalPurchases: z.number().positive(),
-      lastPurchaseDate: z.date().nullable(),
+      cedula: z.string().nullable().optional(),
+      email: z.string().nullable().optional(),
+      sale: z.array(z.object({
+        id: z.number().int().positive(),
+        totalAmount: z.number().optional(),
+      })),
+      purchaseCount: z.number().int().nonnegative(),
     })
   ),
+  topSpenders: z.array(
+    z.object({
+      id: z.number().int().positive(),
+      name: z.string(),
+      cedula: z.string().nullable().optional(),
+      email: z.string().nullable().optional(),
+      sale: z.array(z.object({
+        id: z.number().int().positive(),
+        totalAmount: z.number().optional(),
+      })),
+      totalSpent: z.number().nonnegative(),
+    })
+  ),
+  recentCustomers: z.array(z.object({
+    id: z.number().int().positive(),
+    name: z.string(),
+    cedula: z.string().nullable().optional(),
+    email: z.string().nullable().optional(),
+    phone: z.string().nullable().optional(),
+    createdAt: z.date(),
+    updatedAt: z.date(),
+  })),
+  customersWithoutPurchases: z.array(z.object({
+    id: z.number().int().positive(),
+    name: z.string(),
+    cedula: z.string().nullable().optional(),
+    email: z.string().nullable().optional(),
+    phone: z.string().nullable().optional(),
+  })),
 });
 
 export type CustomerSummary = z.infer<typeof CustomerSummarySchema>;

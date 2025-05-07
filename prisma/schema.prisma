@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../lib/prisma-client"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -19,14 +19,15 @@ model category {
 model customer {
   id        Int      @id @default(autoincrement())
   name      String
-  cedula    String?  @unique
   email     String?
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime
+  idNumber  String?  @unique
+  idType    idType   @default(VENEZOLANO)
   sale      sale[]
-  
-  @@index([cedula])
+
+  @@index([idType, idNumber])
 }
 
 model invoice {
@@ -112,16 +113,24 @@ model user {
   sale      sale[]
 }
 
+model config {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 enum user_role {
   SELLER
   ADMIN
 }
 
 enum sale_paymentMethod {
-  CASH
-  CARD
-  TRANSFER
-  OTHER
+  EFECTIVO
+  PAGO_MOVIL
+  TRANSFERENCIA
+  PUNTO_DE_VENTA
 }
 
 enum invoice_invoiceStatus {
@@ -134,4 +143,12 @@ enum sale_status {
   PENDING
   COMPLETED
   CANCELLED
+}
+
+enum idType {
+  VENEZOLANO
+  EXTRANJERO
+  PASAPORTE
+  JURIDICO
+  OTRO
 }

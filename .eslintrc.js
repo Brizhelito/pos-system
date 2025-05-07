@@ -1,20 +1,15 @@
 module.exports = {
-  extends: ['next/core-web-vitals'],
-  plugins: ['react-hooks'],
+  extends: [
+    "next/core-web-vitals",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+  ],
+  ignorePatterns: ["lib/prisma-client/**/*", ".next", "node_modules"],
+  parser: "@typescript-eslint/parser",
+  plugins: ["@typescript-eslint"],
+  root: true,
   rules: {
-    '@typescript-eslint/no-unused-expressions': 'error',
-    '@typescript-eslint/no-this-alias': 'error',
-    '@typescript-eslint/no-unused-vars': 'error',
-    '@typescript-eslint/no-require-imports': 'error',
-    'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'warn'
+    "@typescript-eslint/no-unused-vars": "warn",
+    "no-console": "warn",
   },
-  ignorePatterns: [
-    'node_modules',
-    'lib/prisma-client/**',  // Ignore all Prisma client generated files
-    '.next',
-    'out',
-    'coverage',
-    'public'
-  ]
-}
+};

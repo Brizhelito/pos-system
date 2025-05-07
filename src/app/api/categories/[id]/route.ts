@@ -10,7 +10,7 @@ import {
 import { CategoryUpdateSchema } from "@/types/Category";
 
 // GET: Obtener una categoría específica por ID
-export async function GET(request: NextRequest, context: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest, context: { params: { id: string 
     }
 
     // Obtener ID de la categoría de los parámetros de ruta
-    const categoryId = parseInt(context.params.id, 10);
+    const categoryId = parseInt(params.id, 10);
 
     if (isNaN(categoryId)) {
       return NextResponse.json(
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest, context: { params: { id: string 
 }
 
 // PUT: Actualizar una categoría existente
-export async function PUT(request: NextRequest, context: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
@@ -62,7 +62,7 @@ export async function PUT(request: NextRequest, context: { params: { id: string 
     }
 
     // Obtener ID de la categoría de los parámetros de ruta
-    const categoryId = parseInt(context.params.id, 10);
+    const categoryId = parseInt(params.id, 10);
 
     if (isNaN(categoryId)) {
       return NextResponse.json(
