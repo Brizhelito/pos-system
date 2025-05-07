@@ -18,7 +18,7 @@ const CartView = ({ items, onUpdateItem, onRemoveItem }: CartViewProps) => {
         subtotal: item.unitPrice * newQuantity,
       });
     },
-    [items, onUpdateItem]
+    [onUpdateItem]
   );
 
   const handleRemoveItem = useCallback(
@@ -50,7 +50,7 @@ const CartView = ({ items, onUpdateItem, onRemoveItem }: CartViewProps) => {
         </div>
       ) : (
         <div className="flex-1 overflow-auto">
-          {items.map((item, index) => (
+          {items.map((item) => (
             <div
               key={item.productId}
               className="cart-item border-b dark:border-gray-700 p-2 hover:bg-accent/5"
