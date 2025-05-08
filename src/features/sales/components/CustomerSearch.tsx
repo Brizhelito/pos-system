@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, RefObject } from "react";
+import { useState, useRef, useEffect, RefObject, useCallback } from "react";
 import { Customer, IdType } from "../types";
 import axios from "axios";
 import SALES_API_ROUTES from "../api/routes";
 import CreateCustomerModal from "./CreateCustomerModal";
 import { toast } from "sonner";
+import { useHotkeys } from "react-hotkeys-hook";
 
 interface CustomerSearchProps {
   onCustomerSelect: (customer: Customer) => void;
@@ -36,6 +37,13 @@ const CustomerSearch = ({
     effectiveInputRef.current?.focus();
   }, [effectiveInputRef]);
 
+  // Memoizar handleClearCustomer con useCallback
+  const handleClearCustomer = useCallback(() => {
+    setCustomer(null);
+    setIdNumber("");
+    effectiveInputRef.current?.focus();
+  }, [effectiveInputRef]);
+
   // Manejador de teclas para todo el componente
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -48,12 +56,10 @@ const CustomerSearch = ({
         }
       }
 
-      // Atajo para cerrar cliente seleccionado (Alt+C en lugar de Escape)
-      if (e.altKey && e.key === "c" && customer) {
+      // Atajo para cerrar cliente seleccionado
+      if (e.altKey && e.key === "x" && customer) {
         e.preventDefault();
-        setCustomer(null);
-        setIdNumber("");
-        effectiveInputRef.current?.focus();
+        handleClearCustomer();
         toast.info("Cliente deseleccionado");
       }
 
@@ -62,7 +68,7 @@ const CustomerSearch = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [idNumber, customer, loading, isCreateModalOpen, effectiveInputRef]);
+  }, [idNumber, customer, loading, isCreateModalOpen, handleClearCustomer]);
 
   // Enfocar el botón de crear cuando aparece la sección "Cliente no encontrado"
   useEffect(() => {
@@ -73,6 +79,21 @@ const CustomerSearch = ({
       }, 100);
     }
   }, [customer, idNumber, loading]);
+
+  useHotkeys(
+    "alt+shift+x",
+    () => {
+      if (customer) {
+        handleClearCustomer();
+        toast.info("Cliente deseleccionado");
+      }
+    },
+    {
+      preventDefault: true,
+      enableOnFormTags: true,
+      enabled: !!customer,
+    }
+  );
 
   const searchCustomer = async () => {
     if (!idNumber.trim()) {
@@ -167,7 +188,7 @@ const CustomerSearch = ({
   }, [idNumber, hasSearched, customer]);
 
   return (
-    <div className="customer-search w-full">
+    <div className="customer-search w-full overflow-hidden">
       <div className="flex items-center gap-1.5 mb-2">
         <select
           className="border dark:border-gray-600 dark:bg-gray-800 rounded p-1.5 w-[4.5rem] text-xs lg:text-sm"
@@ -259,16 +280,11 @@ const CustomerSearch = ({
             </div>
             <button
               className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 flex items-center shrink-0"
-              onClick={() => {
-                setCustomer(null);
-                setIdNumber("");
-                effectiveInputRef.current?.focus();
-                toast.info("Cliente deseleccionado");
-              }}
+              onClick={handleClearCustomer}
               aria-label="Eliminar cliente seleccionado"
             >
               <kbd className="hidden lg:inline-block mr-1 px-1 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-xs rounded">
-                Alt+C
+                Alt+X
               </kbd>
               <svg
                 xmlns="http://www.w3.org/2000/svg"

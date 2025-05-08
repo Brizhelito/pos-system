@@ -45,10 +45,22 @@ const SaleReceipt = ({
   );
 
   useHotkeys(
-    "alt+c",
+    "alt+x",
     () => {
       onClose();
       toast.info("Recibo cerrado");
+    },
+    {
+      preventDefault: true,
+      enableOnFormTags: true,
+    }
+  );
+
+  // Atajo para imprimir recibo
+  useHotkeys(
+    "alt+shift+p",
+    () => {
+      onPrint();
     },
     {
       preventDefault: true,
@@ -184,7 +196,7 @@ const SaleReceipt = ({
         >
           <span className="sr-only">Cerrar</span>
           <kbd className="mr-1 px-1 bg-gray-200 dark:bg-gray-700 text-xs rounded">
-            Alt+C
+            Alt+X
           </kbd>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -297,7 +309,7 @@ const SaleReceipt = ({
         >
           <span className="mr-1">Cerrar</span>
           <kbd className="px-1 bg-gray-200 dark:bg-gray-700 text-xs rounded">
-            Alt+C
+            Alt+X
           </kbd>
         </button>
 

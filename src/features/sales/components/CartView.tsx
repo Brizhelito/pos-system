@@ -1,6 +1,8 @@
 "use client";
-import React, { useCallback } from "react";
+import React, { useCallback, useState, useRef, useEffect, memo } from "react";
 import { CartItem } from "../types";
+import { useHotkeys } from "react-hotkeys-hook";
+import { toast } from "sonner";
 
 interface CartViewProps {
   items: CartItem[];
@@ -8,7 +10,27 @@ interface CartViewProps {
   onRemoveItem: (productId: number) => void;
 }
 
-const CartView = ({ items, onUpdateItem, onRemoveItem }: CartViewProps) => {
+const CartViewComponent = ({
+  items,
+  onUpdateItem,
+  onRemoveItem,
+}: CartViewProps) => {
+  const [selectedItemIndex, setSelectedItemIndex] = useState<number>(-1);
+  const itemRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const cartInputRef = useRef<HTMLInputElement>(null);
+  const cartContainerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to the selected item
+  const scrollToItem = useCallback((index: number) => {
+    if (index !== -1 && itemRefs.current[index]) {
+      itemRefs.current[index]?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, []);
+
+  // Funciones utilizadas en handleKeyDown
   const handleQuantityChange = useCallback(
     (item: CartItem, newQuantity: number) => {
       if (newQuantity < 1) return;
@@ -28,8 +50,146 @@ const CartView = ({ items, onUpdateItem, onRemoveItem }: CartViewProps) => {
     [onRemoveItem]
   );
 
+  // Handle arrow key navigation - optimizado con useCallback
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (items.length === 0) return;
+
+      switch (e.key) {
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedItemIndex((prev) => {
+            const newIndex = prev <= 0 ? items.length - 1 : prev - 1;
+            scrollToItem(newIndex);
+            return newIndex;
+          });
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedItemIndex((prev) => {
+            const newIndex =
+              prev === -1 || prev >= items.length - 1 ? 0 : prev + 1;
+            scrollToItem(newIndex);
+            return newIndex;
+          });
+          break;
+        case "+":
+          if (selectedItemIndex !== -1) {
+            e.preventDefault();
+            const item = items[selectedItemIndex];
+            if (item.quantity < item.product.stock) {
+              handleQuantityChange(item, item.quantity + 1);
+              // Mostrar toast solo para cambios de cantidad significativos (más de 5)
+              if (item.quantity + 1 === 5 || (item.quantity + 1) % 10 === 0) {
+                toast.info(`Cantidad: ${item.quantity + 1}`);
+              }
+            } else {
+              // Mostrar toast para error de stock (crítico)
+              toast.error(`Stock máximo alcanzado: ${item.product.stock}`);
+            }
+          }
+          break;
+        case "-":
+          if (selectedItemIndex !== -1) {
+            e.preventDefault();
+            const item = items[selectedItemIndex];
+            if (item.quantity > 1) {
+              handleQuantityChange(item, item.quantity - 1);
+              // Mostrar toast solo para cambios significativos (menos de 5)
+              if (item.quantity - 1 === 1 || item.quantity - 1 === 5) {
+                toast.info(`Cantidad: ${item.quantity - 1}`);
+              }
+            }
+          }
+          break;
+        case "Delete":
+        case "Backspace":
+          if (selectedItemIndex !== -1) {
+            e.preventDefault();
+            // Siempre mostrar toast para eliminación (crítico)
+            toast.info(`Eliminado: ${items[selectedItemIndex].product.name}`);
+            handleRemoveItem(items[selectedItemIndex].productId);
+            setSelectedItemIndex((prev) =>
+              prev >= items.length - 1 ? Math.max(0, items.length - 2) : prev
+            );
+          }
+          break;
+        case "Escape":
+          e.preventDefault();
+          cartInputRef.current?.blur();
+          setSelectedItemIndex(-1);
+          break;
+      }
+    },
+    [
+      items,
+      selectedItemIndex,
+      handleQuantityChange,
+      handleRemoveItem,
+      scrollToItem,
+    ]
+  );
+
+  // Handle item click - optimizado con useCallback
+  const handleItemClick = useCallback((index: number) => {
+    setSelectedItemIndex(index);
+    cartInputRef.current?.focus();
+  }, []);
+
+  // Focus the cart input when Alt+E is pressed (changed from Alt+R)
+  useHotkeys(
+    "alt+e",
+    () => {
+      cartInputRef.current?.focus();
+      // Solo mostrar el toast cuando hay items disponibles
+      if (items.length > 0) {
+        toast.info("Carrito activado");
+      }
+      if (items.length > 0 && selectedItemIndex === -1) {
+        setSelectedItemIndex(0);
+      }
+    },
+    {
+      preventDefault: true,
+      enableOnFormTags: true,
+    }
+  );
+
+  // Escuchar el evento personalizado para activar el carrito
+  useEffect(() => {
+    const handleFocusCart = () => {
+      cartInputRef.current?.focus();
+      if (items.length > 0 && selectedItemIndex === -1) {
+        setSelectedItemIndex(0);
+      }
+    };
+
+    window.addEventListener("focusCart", handleFocusCart);
+
+    return () => {
+      window.removeEventListener("focusCart", handleFocusCart);
+    };
+  }, [items.length, selectedItemIndex]);
+
+  // Effect to highlight the selected item
+  useEffect(() => {
+    if (selectedItemIndex !== -1 && items.length > 0) {
+      scrollToItem(selectedItemIndex);
+    }
+  }, [selectedItemIndex, items.length, scrollToItem]);
+
   return (
     <div className="cart-view h-full flex flex-col">
+      {/* Hidden input for keyboard focus */}
+      <input
+        ref={cartInputRef}
+        type="text"
+        className="sr-only"
+        aria-label="Control del carrito"
+        onKeyDown={handleKeyDown}
+        tabIndex={-1}
+      />
+
       {items.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center p-4 text-gray-500 dark:text-gray-400">
           <svg
@@ -49,11 +209,44 @@ const CartView = ({ items, onUpdateItem, onRemoveItem }: CartViewProps) => {
           <p className="text-xs">Use F2 para buscar productos</p>
         </div>
       ) : (
-        <div className="flex-1 overflow-auto">
-          {items.map((item) => (
+        <div className="flex-1 overflow-y-auto" ref={cartContainerRef}>
+          <div className="p-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700 sticky top-0">
+            <span>
+              Presione{" "}
+              <kbd className="px-1 bg-gray-200 dark:bg-gray-700 rounded">
+                Alt+E
+              </kbd>{" "}
+              para activar el carrito
+            </span>
+            <p>
+              Use{" "}
+              <kbd className="px-1 bg-gray-200 dark:bg-gray-700 rounded">↑</kbd>{" "}
+              <kbd className="px-1 bg-gray-200 dark:bg-gray-700 rounded">↓</kbd>{" "}
+              para navegar,{" "}
+              <kbd className="px-1 bg-gray-200 dark:bg-gray-700 rounded">+</kbd>{" "}
+              <kbd className="px-1 bg-gray-200 dark:bg-gray-700 rounded">-</kbd>{" "}
+              para cambiar cantidad y{" "}
+              <kbd className="px-1 bg-gray-200 dark:bg-gray-700 rounded">
+                Supr
+              </kbd>{" "}
+              para eliminar
+            </p>
+          </div>
+
+          {items.map((item, index) => (
             <div
               key={item.productId}
-              className="cart-item border-b dark:border-gray-700 p-2 hover:bg-accent/5"
+              ref={(el) => {
+                itemRefs.current[index] = el;
+                return undefined;
+              }}
+              className={`cart-item border-b dark:border-gray-700 p-2 hover:bg-accent/5 ${
+                selectedItemIndex === index
+                  ? "bg-primary/10 dark:bg-primary/20 outline-none ring-1 ring-primary"
+                  : ""
+              } transition-all`}
+              onClick={() => handleItemClick(index)}
+              tabIndex={-1}
             >
               <div className="flex flex-col sm:flex-row gap-2">
                 <div className="flex-1 min-w-0">
@@ -69,9 +262,10 @@ const CartView = ({ items, onUpdateItem, onRemoveItem }: CartViewProps) => {
                   <div className="flex items-center gap-1">
                     <button
                       className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-                      onClick={() =>
-                        handleQuantityChange(item, item.quantity - 1)
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleQuantityChange(item, item.quantity - 1);
+                      }}
                       disabled={item.quantity <= 1}
                       aria-label="Disminuir cantidad"
                     >
@@ -96,9 +290,10 @@ const CartView = ({ items, onUpdateItem, onRemoveItem }: CartViewProps) => {
 
                     <button
                       className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-                      onClick={() =>
-                        handleQuantityChange(item, item.quantity + 1)
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleQuantityChange(item, item.quantity + 1);
+                      }}
                       disabled={item.quantity >= item.product.stock}
                       aria-label="Aumentar cantidad"
                     >
@@ -130,7 +325,13 @@ const CartView = ({ items, onUpdateItem, onRemoveItem }: CartViewProps) => {
 
                     <button
                       className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
-                      onClick={() => handleRemoveItem(item.productId)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveItem(item.productId);
+                        if (selectedItemIndex === index) {
+                          setSelectedItemIndex(Math.max(0, items.length - 2));
+                        }
+                      }}
                       aria-label="Eliminar producto"
                     >
                       <svg
@@ -157,5 +358,8 @@ const CartView = ({ items, onUpdateItem, onRemoveItem }: CartViewProps) => {
     </div>
   );
 };
+
+const CartView = memo(CartViewComponent);
+CartView.displayName = "CartView";
 
 export default CartView;
