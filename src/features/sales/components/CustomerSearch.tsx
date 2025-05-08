@@ -37,6 +37,48 @@ const CustomerSearch = ({
     effectiveInputRef.current?.focus();
   }, [effectiveInputRef]);
 
+  // Verificar si el campo de búsqueda ha recibido foco cuando no hay cliente seleccionado
+  // Esto ayuda cuando se reinicia el componente desde fuera
+  useEffect(() => {
+    // Solo ejecutar en el cliente
+    if (typeof window === "undefined") return;
+
+    const handleFocus = () => {
+      // Si el componente recibe foco y hay un cliente seleccionado pero
+      // el estado general de la aplicación indica que no debe haber un cliente,
+      // entonces resetear el componente
+      if (customer && document.activeElement === effectiveInputRef.current) {
+        // Comprobar el localStorage para ver si hay inconsistencia
+        try {
+          const storedCustomer = localStorage.getItem("pos_selected_customer");
+          if (!storedCustomer) {
+            console.log(
+              "Cliente deseleccionado externamente, reseteando estado local"
+            );
+            setCustomer(null);
+            setIdNumber("");
+            setHasSearched(false);
+          }
+        } catch (error) {
+          // En caso de error, mejor resetear por seguridad
+          console.error("Error al verificar cliente en localStorage:", error);
+          setCustomer(null);
+          setIdNumber("");
+          setHasSearched(false);
+        }
+      }
+    };
+
+    // Agregar evento de foco al campo de búsqueda
+    const currentInput = effectiveInputRef.current;
+    if (currentInput) {
+      currentInput.addEventListener("focus", handleFocus);
+      return () => {
+        currentInput.removeEventListener("focus", handleFocus);
+      };
+    }
+  }, [customer, effectiveInputRef]);
+
   // Memoizar handleClearCustomer con useCallback
   const handleClearCustomer = useCallback(() => {
     setCustomer(null);

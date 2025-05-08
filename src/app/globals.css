@@ -152,3 +152,40 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* Estilos para impresión */
+@media print {
+  /* Ocultar elementos no imprimibles */
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Forzar colores de fondo en impresión */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* Evitar cortes de página dentro de elementos importantes */
+  .receipt-content, 
+  .receipt-customer,
+  .receipt-items,
+  .receipt-summary {
+    page-break-inside: avoid;
+  }
+  
+  /* Ajustar márgenes para impresión */
+  @page {
+    margin: 0.5cm;
+  }
+  
+  /* Asegurar que el texto negro se imprima correctamente */
+  body {
+    color: #000;
+  }
+  
+  /* Asegurar que las tablas se impriman correctamente */
+  table, th, td {
+    border-color: #000 !important;
+  }
+}

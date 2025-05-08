@@ -13,6 +13,8 @@ export const SALES_API_ROUTES = {
   // Sale endpoints
   PROCESS_SALE: "/api/sales/process-sale",
   GET_RECEIPT: "/api/sales/receipt",
+  GENERATE_PDF: "/api/sales/receipt/pdf",
+  SEND_EMAIL: "/api/sales/receipt/email",
 };
 
 export default SALES_API_ROUTES;

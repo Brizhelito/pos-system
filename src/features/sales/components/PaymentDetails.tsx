@@ -9,6 +9,7 @@ interface PaymentDetailsProps {
   total: number;
   onProcessPayment: () => void;
   onCancel: () => void;
+  isProcessing?: boolean;
 }
 
 const PaymentDetails = ({
@@ -17,6 +18,7 @@ const PaymentDetails = ({
   total,
   onProcessPayment,
   onCancel,
+  isProcessing = false,
 }: PaymentDetailsProps) => {
   const [paymentData, setPaymentData] = useState<Record<string, string>>({});
   const [amountInput, setAmountInput] = useState<string>("");
@@ -26,6 +28,7 @@ const PaymentDetails = ({
   const [selectedButtonIndex, setSelectedButtonIndex] = useState<number>(-1);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] =
     useState<number>(-1);
+  const [isValidating, setIsValidating] = useState(false);
 
   const inputRefs = useRef<
     Record<string, HTMLInputElement | HTMLSelectElement | null>
@@ -426,6 +429,78 @@ const PaymentDetails = ({
     }
   );
 
+  // Modificar para llamar directamente a onProcessPayment
+  const handleConfirmPayment = () => {
+    // Evitar múltiples clics mientras se valida
+    if (isValidating || isProcessing) {
+      return;
+    }
+
+    setIsValidating(true);
+
+    // Validar campos según el método de pago
+    const fields = getFieldsForMethod(method);
+    let isValid = true;
+
+    for (const field of fields) {
+      if (!paymentData[field]) {
+        isValid = false;
+        toast.error(`Falta completar el campo ${getFieldLabel(field)}`);
+        inputRefs.current[field]?.focus();
+        setIsValidating(false);
+        break;
+      }
+    }
+
+    // En caso de efectivo, validar que el monto sea suficiente
+    if (
+      isValid &&
+      method === PaymentMethod.EFECTIVO &&
+      paymentData.amountReceived &&
+      parseFloat(paymentData.amountReceived) < total
+    ) {
+      isValid = false;
+      toast.error(`El monto debe ser mayor o igual a ${formatCurrency(total)}`);
+      inputRefs.current["amountReceived"]?.focus();
+      setIsValidating(false);
+    }
+
+    if (isValid) {
+      try {
+        // Si todo está válido, llamar directamente a onProcessPayment
+        onProcessPayment();
+      } catch (error) {
+        toast.error("Error al procesar el pago");
+        console.error("Error en onProcessPayment:", error);
+        setIsValidating(false);
+      }
+
+      // No resetear isValidating aquí, ya que el componente puede desmontarse
+      // o el estado isProcessing tomará el control
+    } else {
+      setIsValidating(false);
+    }
+  };
+
+  // Función para obtener etiqueta legible de un campo
+  const getFieldLabel = (field: string): string => {
+    const labels: Record<string, string> = {
+      amountReceived: "Monto recibido",
+      phoneNumber: "Número de teléfono",
+      bank: "Banco",
+      reference: "Referencia",
+      sourceBank: "Banco origen",
+      targetBank: "Banco destino",
+      lastDigits: "Últimos 4 dígitos",
+    };
+    return labels[field] || field;
+  };
+
+  // Modificar handleProcessClick para usar handleConfirmPayment
+  const handleProcessClick = () => {
+    handleConfirmPayment();
+  };
+
   const renderInputs = () => {
     switch (method) {
       case PaymentMethod.EFECTIVO:
@@ -825,6 +900,8 @@ const PaymentDetails = ({
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
+      // Asegurarse de resetear isValidating si el componente se desmonta
+      setIsValidating(false);
     };
   }, []);
 
@@ -850,13 +927,14 @@ const PaymentDetails = ({
         <div className="flex gap-2">
           <button
             ref={processButtonRef}
-            onClick={onProcessPayment}
+            onClick={handleProcessClick}
             className={`flex-1 bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 font-medium ${
               navigationMode === "buttons" && selectedButtonIndex === 0
                 ? "ring-2 ring-blue-300"
                 : ""
             }`}
             onKeyDown={handleButtonNavigation}
+            disabled={isProcessing || isValidating}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -870,7 +948,7 @@ const PaymentDetails = ({
                 clipRule="evenodd"
               />
             </svg>
-            Procesar Pago
+            {isProcessing || isValidating ? "Procesando..." : "Procesar Pago"}
           </button>
           <button
             ref={cancelButtonRef}
@@ -881,6 +959,7 @@ const PaymentDetails = ({
                 : ""
             }`}
             onKeyDown={handleButtonNavigation}
+            disabled={isProcessing || isValidating}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -903,3 +982,4 @@ const PaymentDetails = ({
 };
 
 export default PaymentDetails;
+ 

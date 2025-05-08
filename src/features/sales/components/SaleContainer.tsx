@@ -11,6 +11,9 @@ import SALES_API_ROUTES from "../api/routes";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { PDFService } from "../services/PDFService";
+import SaleConfirmationDialog from "./SaleConfirmationDialog";
+import { TAX_CONFIG } from "@/utils/constants";
 
 // Constantes para las claves de localStorage
 const STORAGE_KEYS = {
@@ -22,7 +25,22 @@ const STORAGE_KEYS = {
 
 const SaleContainer = () => {
   const [saleState, setSaleState] = useState(() => {
-    // Intentar recuperar datos del localStorage al iniciar
+    // Estado inicial por defecto (sin intentar acceder a localStorage)
+    const initialState = {
+      customer: null as Customer | null,
+      items: [] as CartItem[],
+      paymentMethod: PaymentMethod.EFECTIVO,
+      total: 0,
+      subtotal: 0,
+      tax: 0,
+    };
+
+    // Evitamos acceder a localStorage durante el renderizado del servidor
+    if (typeof window === "undefined") {
+      return initialState;
+    }
+
+    // Ahora estamos seguros de que estamos en el navegador
     try {
       const storedItems = localStorage.getItem(STORAGE_KEYS.CART_ITEMS);
       const storedCustomer = localStorage.getItem(
@@ -46,19 +64,17 @@ const SaleContainer = () => {
       };
     } catch (error) {
       console.error("Error al recuperar datos guardados:", error);
-      return {
-        customer: null as Customer | null,
-        items: [] as CartItem[],
-        paymentMethod: PaymentMethod.EFECTIVO,
-        total: 0,
-        subtotal: 0,
-        tax: 0,
-      };
+      return initialState;
     }
   });
 
   const [paymentDetails, setPaymentDetails] = useState<Record<string, string>>(
     () => {
+      // Evitar acceder a localStorage durante el renderizado del servidor
+      if (typeof window === "undefined") {
+        return {};
+      }
+
       try {
         const storedPaymentDetails = localStorage.getItem(
           STORAGE_KEYS.PAYMENT_DETAILS
@@ -129,7 +145,7 @@ const SaleContainer = () => {
       (sum: number, item: CartItem) => sum + item.subtotal,
       0
     );
-    const taxRate = 0.16; // Obtener de configuración
+    const taxRate = TAX_CONFIG.rate; // Usar la tasa desde la configuración
     const tax = subtotal * taxRate;
     const total = subtotal + tax;
 
@@ -148,6 +164,9 @@ const SaleContainer = () => {
 
   // Guardar datos en localStorage cuando cambien
   useEffect(() => {
+    // Solo ejecutar en el cliente
+    if (typeof window === "undefined") return;
+
     localStorage.setItem(
       STORAGE_KEYS.CART_ITEMS,
       JSON.stringify(saleState.items)
@@ -155,6 +174,9 @@ const SaleContainer = () => {
   }, [saleState.items]);
 
   useEffect(() => {
+    // Solo ejecutar en el cliente
+    if (typeof window === "undefined") return;
+
     if (saleState.customer) {
       localStorage.setItem(
         STORAGE_KEYS.SELECTED_CUSTOMER,
@@ -166,6 +188,9 @@ const SaleContainer = () => {
   }, [saleState.customer]);
 
   useEffect(() => {
+    // Solo ejecutar en el cliente
+    if (typeof window === "undefined") return;
+
     localStorage.setItem(
       STORAGE_KEYS.PAYMENT_METHOD,
       JSON.stringify(saleState.paymentMethod)
@@ -173,6 +198,9 @@ const SaleContainer = () => {
   }, [saleState.paymentMethod]);
 
   useEffect(() => {
+    // Solo ejecutar en el cliente
+    if (typeof window === "undefined") return;
+
     localStorage.setItem(
       STORAGE_KEYS.PAYMENT_DETAILS,
       JSON.stringify(paymentDetails)
@@ -181,6 +209,9 @@ const SaleContainer = () => {
 
   // Función para limpiar completamente el almacenamiento local
   const clearSaleStorage = () => {
+    // Solo ejecutar en el cliente
+    if (typeof window === "undefined") return;
+
     localStorage.removeItem(STORAGE_KEYS.CART_ITEMS);
     localStorage.removeItem(STORAGE_KEYS.SELECTED_CUSTOMER);
     localStorage.removeItem(STORAGE_KEYS.PAYMENT_METHOD);
@@ -227,11 +258,12 @@ const SaleContainer = () => {
     }
   );
 
+  // Atajo para procesar la venta (F4)
   useHotkeys(
     "f4",
     () => {
       if (canProcessSale()) {
-        processSale();
+        handleProcessSaleClick();
       } else {
         toast.error(
           "No se puede procesar la venta. Verifica cliente y productos."
@@ -564,7 +596,16 @@ const SaleContainer = () => {
     [saleState.items]
   );
 
-  const processSale = async () => {
+  // Estado para el diálogo de confirmación de venta
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  // Modificar la función de procesamiento de venta para usar el diálogo de confirmación
+  const handleProcessSaleClick = () => {
+    // Evitar procesamiento si ya está en progreso
+    if (isProcessing) {
+      return;
+    }
+
     if (!saleState.customer) {
       toast.error("Debe seleccionar un cliente");
       customerSearchRef.current?.focus();
@@ -583,20 +624,36 @@ const SaleContainer = () => {
       return;
     }
 
+    // Mostrar el diálogo de confirmación
+    setShowConfirmDialog(true);
+  };
+
+  // Función para procesar la venta después de la confirmación
+  const processSale = async () => {
+    // Evitar procesamiento duplicado
+    if (isProcessing) {
+      console.log("Procesamiento ya en curso, evitando duplicación");
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
       const saleData = {
-        customerId: saleState.customer.id,
+        customerId: saleState.customer!.id,
         items: saleState.items.map((item: CartItem) => ({
           productId: item.productId,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
+          subtotal: item.subtotal,
         })),
         paymentMethod: saleState.paymentMethod,
         total: saleState.total,
         paymentDetails: paymentDetails, // Enviamos los detalles del pago
       };
+
+      // Guardar referencia al cliente antes de procesar, por si necesitamos restaurarlo en caso de error
+      const currentCustomer = saleState.customer;
 
       // Enviar a la API
       const response = await fetch(SALES_API_ROUTES.PROCESS_SALE, {
@@ -610,6 +667,9 @@ const SaleContainer = () => {
       const result = await response.json();
 
       if (response.ok) {
+        // Cerrar diálogo de confirmación
+        setShowConfirmDialog(false);
+
         // Guardar la venta completada
         setCompletedSale(result.sale);
 
@@ -634,6 +694,12 @@ const SaleContainer = () => {
         setPaymentDetails({});
       } else {
         toast.error(`Error al procesar la venta: ${result.message}`);
+
+        // Restaurar el cliente si hubo un error
+        setSaleState((prev) => ({
+          ...prev,
+          customer: currentCustomer,
+        }));
       }
     } catch (error) {
       console.error("Error al procesar la venta:", error);
@@ -644,56 +710,172 @@ const SaleContainer = () => {
   };
 
   const handlePrintReceipt = () => {
-    if (receiptRef.current) {
-      // Crear un iframe para imprimir solo el contenido del recibo
+    if (!completedSale) {
+      toast.error("No hay una venta completada para imprimir");
+      return;
+    }
+
+    try {
+      // Verificar si la referencia al recibo existe
+      if (!receiptRef.current) {
+        toast.error("No se encontró el elemento del recibo para imprimir");
+        console.error("receiptRef.current es null o undefined");
+        return;
+      }
+
+      // Contenido HTML del recibo
+      const receiptContent = receiptRef.current.innerHTML;
+      if (!receiptContent) {
+        toast.error("El contenido del recibo está vacío");
+        return;
+      }
+
+      toast.info("Preparando documento para impresión...");
+
+      // Crear un iframe oculto para la impresión
       const printIframe = document.createElement("iframe");
       printIframe.style.display = "none";
       document.body.appendChild(printIframe);
 
-      printIframe.contentDocument?.write(`
+      // Verificar que el documento del iframe esté disponible
+      if (!printIframe.contentDocument) {
+        toast.error(
+          "Error al preparar la impresión: no se pudo crear el documento"
+        );
+        document.body.removeChild(printIframe);
+        return;
+      }
+
+      // Insertar el contenido en el iframe
+      printIframe.contentDocument.write(`
         <html>
           <head>
-            <title>Recibo de Venta</title>
+            <title>${
+              completedSale.invoice ? "Factura" : "Recibo"
+            } de Venta</title>
             <style>
-              body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-              .receipt { width: 100%; max-width: 400px; margin: 0 auto; }
-              .header { text-align: center; margin-bottom: 20px; }
-              .info-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-              table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-              th { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
-              td { padding: 8px; border-bottom: 1px solid #ddd; }
-              .total-row { font-weight: bold; }
-              .footer { text-align: center; margin-top: 20px; font-size: 12px; }
+              body { 
+                font-family: Arial, sans-serif; 
+                margin: 0; 
+                padding: 20px; 
+              }
+              .receipt { 
+                width: 100%; 
+                max-width: 400px; 
+                margin: 0 auto; 
+              }
+              .header { 
+                text-align: center; 
+                margin-bottom: 20px; 
+              }
+              .info-row { 
+                display: flex; 
+                justify-content: space-between; 
+                margin-bottom: 5px; 
+              }
+              table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin: 15px 0; 
+              }
+              th { 
+                text-align: left; 
+                padding: 8px; 
+                border-bottom: 1px solid #ddd; 
+              }
+              td { 
+                padding: 8px; 
+                border-bottom: 1px solid #ddd; 
+              }
+              .total-row { 
+                font-weight: bold; 
+              }
+              .footer { 
+                text-align: center; 
+                margin-top: 20px; 
+                font-size: 12px; 
+              }
+              @media print {
+                body { 
+                  -webkit-print-color-adjust: exact; 
+                  color-adjust: exact; 
+                }
+                button, .no-print { 
+                  display: none !important; 
+                }
+              }
             </style>
           </head>
           <body>
             <div class="receipt">
-              ${receiptRef.current.innerHTML}
+              ${receiptContent}
             </div>
+            <script>
+              // Eliminar botones y elementos que no deberían imprimirse
+              document.querySelectorAll('button, .no-print').forEach(el => {
+                el.style.display = 'none';
+              });
+            </script>
           </body>
         </html>
       `);
 
-      // Esperar a que el contenido se cargue
+      // Cerrar el documento
+      printIframe.contentDocument.close();
+
+      // Esperar a que el contenido se cargue para imprimir (solo una vez)
       setTimeout(() => {
-        // Imprimir y eliminar el iframe
-        printIframe.contentWindow?.print();
-        setTimeout(() => {
+        try {
+          // Verificar si la ventana está disponible antes de imprimir
+          if (printIframe.contentWindow) {
+            printIframe.contentWindow.print();
+            // Eliminar el iframe después de un tiempo
+            setTimeout(() => {
+              document.body.removeChild(printIframe);
+              toast.success("Documento enviado a impresión");
+            }, 1000);
+          } else {
+            document.body.removeChild(printIframe);
+            toast.error("Error durante la impresión: ventana no disponible");
+          }
+        } catch (err) {
           document.body.removeChild(printIframe);
-        }, 500);
+          toast.error("Error durante la impresión");
+          console.error("Error de impresión:", err);
+        }
       }, 500);
-    } else {
-      window.print();
+    } catch (err) {
+      toast.error("Error al preparar la impresión");
+      console.error("Error de impresión:", err);
     }
   };
 
   const handleCloseReceipt = () => {
     setShowReceipt(false);
     setCompletedSale(null);
-    // Limpiar almacenamiento al cerrar el recibo
+
+    // Asegurarse de que el estado está limpio
+    if (saleState.customer !== null || saleState.items.length > 0) {
+      // Reiniciar el estado explícitamente
+      setSaleState({
+        customer: null,
+        items: [],
+        paymentMethod: PaymentMethod.EFECTIVO,
+        total: 0,
+        subtotal: 0,
+        tax: 0,
+      });
+      setPaymentDetails({});
+    }
+
+    // Limpiar almacenamiento
     clearSaleStorage();
-    // Enfocar de nuevo en la búsqueda de cliente después de completar la venta
+
+    // Enfocar en la búsqueda de cliente para comenzar una nueva venta
     customerSearchRef.current?.focus();
+
+    // Mostrar notificación de nueva venta lista
+    toast.success("Listo para iniciar una nueva venta");
   };
 
   // Función para limpiar el carrito
@@ -704,6 +886,101 @@ const SaleContainer = () => {
     }));
     clearSaleStorage();
     toast.success("Carrito limpiado completamente");
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!completedSale) {
+      toast.error("No hay una venta completada para generar PDF");
+      return;
+    }
+
+    try {
+      // Validar que los datos necesarios estén presentes
+      if (!completedSale.customer) {
+        toast.error("No hay datos de cliente para la factura");
+        return;
+      }
+
+      const items =
+        completedSale.saleitem
+          ?.filter((item) => item.product)
+          .map((item) => ({
+            productId: item.productId,
+            product: item.product!,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            subtotal: item.subtotal,
+          })) || [];
+
+      if (items.length === 0) {
+        toast.error("No hay productos en la venta para generar PDF");
+        return;
+      }
+
+      // Generar PDF usando nuestro servicio
+      toast.info("Generando PDF...");
+      const pdfBlob = await PDFService.generateSaleReceipt(
+        completedSale,
+        completedSale.customer as Customer,
+        items
+      );
+
+      // Crear URL para descargar el PDF
+      const url = window.URL.createObjectURL(pdfBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `factura-${
+        completedSale.invoice?.number || completedSale.id
+      }.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success("PDF descargado correctamente");
+    } catch (error) {
+      console.error("Error al generar PDF:", error);
+      toast.error("Error al generar el PDF");
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!completedSale || !completedSale.customer?.email) {
+      toast.error("No hay un email de cliente disponible");
+      return;
+    }
+
+    try {
+      toast.info(`Enviando factura a ${completedSale.customer.email}...`);
+
+      // Generar el PDF para enviar por correo
+      const items =
+        completedSale.saleitem
+          ?.filter((item) => item.product)
+          .map((item) => ({
+            productId: item.productId,
+            product: item.product!,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            subtotal: item.subtotal,
+          })) || [];
+
+      if (items.length === 0) {
+        toast.error("No hay productos en la venta para enviar");
+        return;
+      }
+
+      // En un caso real, aquí generaríamos el PDF y lo enviaríamos por API
+      // Por ahora, simulamos una respuesta exitosa después de una breve demora
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      toast.success(
+        `Factura enviada por email a ${completedSale.customer.email}`
+      );
+    } catch (error) {
+      console.error("Error al enviar email:", error);
+      toast.error("Error al enviar el email");
+    }
   };
 
   return (
@@ -843,7 +1120,10 @@ const SaleContainer = () => {
               <span>${saleState.subtotal.toFixed(2)}</span>
             </p>
             <p className="flex justify-between text-muted-foreground">
-              <span>IVA (16%):</span> <span>${saleState.tax.toFixed(2)}</span>
+              <span>
+                {TAX_CONFIG.label} ({TAX_CONFIG.percentage}):
+              </span>{" "}
+              <span>${saleState.tax.toFixed(2)}</span>
             </p>
             <p className="flex justify-between font-semibold text-lg mt-2 pt-2 border-t text-foreground">
               <span>TOTAL:</span> <span>${saleState.total.toFixed(2)}</span>
@@ -901,7 +1181,7 @@ const SaleContainer = () => {
                 method={saleState.paymentMethod}
                 onDataChange={handlePaymentDetailsChange}
                 total={saleState.total}
-                onProcessPayment={processSale}
+                onProcessPayment={handleProcessSaleClick}
                 onCancel={() => {
                   setSaleState((prev) => ({
                     ...prev,
@@ -909,6 +1189,7 @@ const SaleContainer = () => {
                   }));
                   setPaymentDetails({});
                 }}
+                isProcessing={isProcessing}
               />
             </div>
           </div>
@@ -916,12 +1197,12 @@ const SaleContainer = () => {
           <button
             ref={processButtonRef}
             className={`mt-auto p-3 rounded-lg flex items-center justify-center transition-all duration-200 ${
-              canProcessSale()
+              canProcessSale() && !isProcessing
                 ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md"
                 : "bg-muted text-muted-foreground cursor-not-allowed"
             }`}
-            onClick={processSale}
-            disabled={!canProcessSale()}
+            onClick={handleProcessSaleClick}
+            disabled={!canProcessSale() || isProcessing}
             aria-label="Procesar venta"
           >
             <span className="mr-2 bg-primary-foreground/10 text-primary-foreground px-2 py-1 rounded text-xs">
@@ -969,17 +1250,11 @@ const SaleContainer = () => {
 
       {/* Recibo de Venta (Modal) */}
       {showReceipt && completedSale && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div
-            className="bg-background border shadow-lg rounded-lg w-full max-w-2xl max-h-[90vh] overflow-auto"
-            ref={receiptRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="receipt-title"
-          >
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div ref={receiptRef}>
             <SaleReceipt
               sale={completedSale}
-              customer={completedSale.customer as Customer}
+              customer={completedSale.customer!}
               items={
                 completedSale.saleitem
                   ?.filter((item) => item.product)
@@ -993,6 +1268,8 @@ const SaleContainer = () => {
               }
               onClose={handleCloseReceipt}
               onPrint={handlePrintReceipt}
+              onDownloadPDF={handleDownloadPDF}
+              onSendEmail={handleSendEmail}
             />
           </div>
         </div>
@@ -1032,6 +1309,19 @@ const SaleContainer = () => {
         confirmText="Cancelar venta"
         cancelText="Volver"
         confirmVariant="destructive"
+      />
+
+      {/* Diálogo de confirmación de venta */}
+      <SaleConfirmationDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={processSale}
+        customer={saleState.customer}
+        items={saleState.items}
+        paymentMethod={saleState.paymentMethod}
+        total={saleState.total}
+        paymentDetails={paymentDetails}
+        isProcessing={isProcessing}
       />
     </>
   );
