@@ -145,7 +145,37 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // --- 6. Protección de Rutas de Cajero (Seller) ---
+  // --- 6. Protección de Rutas de Reportes ---
+  // Verifica si la ruta actual es una ruta de reportes (página o API).
+  const isReportsPath =
+    pathname.startsWith("/reports") || pathname.startsWith("/api/reports/");
+  if (isReportsPath) {
+    // Los reportes solo son accesibles por administradores
+    if (role !== ADMIN_ROLE) {
+      console.log(
+        `Acceso PROHIBIDO a ruta de reportes (${pathname}). Usuario ${userId} tiene rol ${role}.`
+      );
+      if (isApiRoute) {
+        return createJsonResponse(
+          403,
+          "FORBIDDEN",
+          "Insufficient permissions. Admin role required for reports."
+        );
+      } else {
+        // Redirige a la página de no autorizado para rutas de página.
+        return NextResponse.redirect(new URL(UNAUTHORIZED_PATH, url));
+      }
+    } else {
+      // Si es administrador, redirigir a la ruta de admin/reports
+      if (!pathname.startsWith("/admin")) {
+        return NextResponse.redirect(
+          new URL(pathname.replace("/reports", "/admin/reports"), url)
+        );
+      }
+    }
+  }
+
+  // --- 7. Protección de Rutas de Cajero (Seller) ---
   // Verifica si la ruta actual es una ruta de seller (página o API).
   const isSellerPath =
     pathname.startsWith("/seller") || pathname.startsWith("/api/seller/");
@@ -173,7 +203,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // --- 7. Acceso Permitido ---
+  // --- 8. Acceso Permitido ---
   // Si el código llega hasta aquí, significa que el usuario está autenticado
   // y tiene permiso para acceder a la ruta solicitada (o es una ruta no protegida por rol específico).
   // Se devuelve la respuesta original para continuar con la solicitud y mantener la sesión.
@@ -194,4 +224,3 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };
-// --- Fin del Middleware ---

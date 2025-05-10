@@ -1,4 +1,6 @@
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { AlertCircle, CheckCircle, X, AlertTriangle } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,30 +41,112 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     }
   };
 
+  const slideUp = {
+    hidden: {
+      opacity: 0,
+      y: 20,
+      scale: 0.95,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.2,
+        type: "spring",
+        damping: 25,
+        stiffness: 300,
+      },
+    },
+    exit: {
+      opacity: 0,
+      y: 20,
+      scale: 0.95,
+      transition: {
+        duration: 0.2,
+      },
+    },
+  };
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent onKeyDown={handleKeyDown}>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose}>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => {
-              onConfirm();
-              onClose();
-            }}
-            className={
-              confirmVariant === "destructive"
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                : ""
-            }
+      <AnimatePresence mode="wait">
+        {isOpen && (
+          <AlertDialogContent
+            onKeyDown={handleKeyDown}
+            className="p-0 border-none shadow-xl overflow-hidden"
+            forceMount
           >
-            {confirmText}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+            <motion.div
+              variants={slideUp}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="p-6"
+            >
+              <AlertDialogHeader className="gap-4">
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`rounded-full p-2 ${
+                      confirmVariant === "destructive"
+                        ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                        : "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                    }`}
+                  >
+                    {confirmVariant === "destructive" ? (
+                      <AlertTriangle size={24} />
+                    ) : (
+                      <AlertCircle size={24} />
+                    )}
+                  </div>
+                  <div>
+                    <AlertDialogTitle className="text-xl font-semibold mb-2">
+                      {title}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
+                      {description}
+                    </AlertDialogDescription>
+                  </div>
+                </div>
+              </AlertDialogHeader>
+
+              <AlertDialogFooter className="gap-2 mt-6 flex justify-end sm:justify-end">
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <AlertDialogCancel
+                    onClick={onClose}
+                    className="flex items-center gap-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    <X size={16} />
+                    {cancelText}
+                  </AlertDialogCancel>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <AlertDialogAction
+                    onClick={() => {
+                      onConfirm();
+                      onClose();
+                    }}
+                    className={`flex items-center gap-1 ${
+                      confirmVariant === "destructive"
+                        ? "bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
+                        : "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
+                    }`}
+                  >
+                    <CheckCircle size={16} />
+                    {confirmText}
+                  </AlertDialogAction>
+                </motion.div>
+              </AlertDialogFooter>
+            </motion.div>
+          </AlertDialogContent>
+        )}
+      </AnimatePresence>
     </AlertDialog>
   );
 };

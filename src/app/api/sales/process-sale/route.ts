@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { PrismaClient, sale_paymentMethod } from "@prisma/client";
 import { ProcessSaleSchema } from "@/features/sales/api/validation";
 import { PaymentMethod } from "@/features/sales/types";
+import { getIronSession, IronSessionData } from "iron-session";
+import { sessionOptions } from "@/lib/auth/auth";
 
 const prisma = new PrismaClient();
 
@@ -29,7 +31,11 @@ const mapToDbPaymentMethod = (appMethod: PaymentMethod): sale_paymentMethod => {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
+    const session = await getIronSession<IronSessionData>(
+      request,
+      new Response(),
+      sessionOptions
+    );
     // Validar datos de entrada
     const result = ProcessSaleSchema.safeParse(body);
     if (!result.success) {
@@ -62,7 +68,7 @@ export async function POST(request: Request) {
       }
 
       // 2. Crear la venta
-      const userId = 1; // TODO: Obtener del contexto de autenticación
+      const userId = session.user?.id || 1;
 
       const newSale = await tx.sale.create({
         data: {
