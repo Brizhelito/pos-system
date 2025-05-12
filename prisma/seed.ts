@@ -13,8 +13,6 @@ async function main() {
     { key: "receipt_footer", value: "Gracias por su compra" },
   ];
 
-  console.log(`Start seeding default configurations...`);
-
   for (const config of defaultConfigs) {
     // Upsert para evitar duplicados
     await prisma.config.upsert({
@@ -26,8 +24,6 @@ async function main() {
       },
     });
   }
-
-  console.log(`Seeding finished.`);
 }
 
 main()

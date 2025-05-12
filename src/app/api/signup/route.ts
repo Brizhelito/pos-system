@@ -15,7 +15,6 @@ export async function POST(
 ): Promise<NextResponse<CreateUserResponse>> {
   try {
     const body = await req.json();
-    console.log("Request body received:", body);
 
     // --- Validation with Zod ---
     // Validate the request body using your schema

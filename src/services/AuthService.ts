@@ -113,8 +113,6 @@ export const loginUser = async (loginRequest: LoginRequest) => {
   if (!user.password) {
     throw new APIError("Contraseña no establecida", 400, "PASSWORD_NOT_SET");
   }
-  console.log("Login request password:", loginRequest.password);
-  console.log("User password:", user.password);
 
   const pepper = AUTH_CONFIG.bcryptPepper;
   const isPasswordValid = await bcrypt.compare(

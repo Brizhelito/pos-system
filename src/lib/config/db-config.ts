@@ -106,7 +106,6 @@ export const initializeConfig = async (): Promise<void> => {
       for (const [key, value] of Object.entries(defaults)) {
         await setConfigValue(key, value);
       }
-      console.log("Configuración inicializada correctamente");
     }
   } catch (error) {
     console.error("Error al inicializar configuración:", error);

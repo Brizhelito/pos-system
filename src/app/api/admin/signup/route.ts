@@ -15,7 +15,6 @@ export async function POST(
 ): Promise<NextResponse<CreateUserResponse>> {
   try {
     const body = await request.json();
-    console.log("Request body received:", body);
 
     // Validar los datos con Zod
     const validatedData = CreateUserSchema.parse(body);

@@ -93,7 +93,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Extraer rol e ID para facilitar el acceso
-  const { role, id: userId } = session.user;
+  const { role } = session.user;
 
   // --- 4. Redirección desde el Dashboard Genérico ---
   // Si un usuario autenticado va a "/dashboard", redirigirlo a su dashboard específico.
@@ -116,9 +116,9 @@ export async function middleware(request: NextRequest) {
     // Si es ruta de admin, PERO el rol del usuario NO es ADMIN...
     if (role !== ADMIN_ROLE) {
       // Log específico indicando el rol que intentó acceder.
-      console.log(
-        `Acceso PROHIBIDO a ruta ADMIN (${pathname}). Usuario ${userId} tiene rol ${role}.`
-      );
+      // console.log(
+      //   `Acceso PROHIBIDO a ruta ADMIN (${pathname}). Usuario ${userId} tiene rol ${role}.`
+      // );
       if (isApiRoute) {
         // Devuelve error 403 para rutas API.
         return createJsonResponse(
@@ -143,9 +143,9 @@ export async function middleware(request: NextRequest) {
   if (isReportsPath) {
     // Los reportes solo son accesibles por administradores
     if (role !== ADMIN_ROLE) {
-      console.log(
-        `Acceso PROHIBIDO a ruta de reportes (${pathname}). Usuario ${userId} tiene rol ${role}.`
-      );
+      // console.log(
+      //   `Acceso PROHIBIDO a ruta de reportes (${pathname}). Usuario ${userId} tiene rol ${role}.`
+      // );
       if (isApiRoute) {
         return createJsonResponse(
           403,
@@ -174,9 +174,9 @@ export async function middleware(request: NextRequest) {
     // Si es ruta de seller, PERO el rol del usuario NO es SELLER...
     if (role !== SELLER_ROLE) {
       // Log específico indicando el rol que intentó acceder.
-      console.log(
-        `Acceso PROHIBIDO a ruta SELLER (${pathname}). Usuario ${userId} tiene rol ${role}.`
-      );
+      // console.log(
+      //   `Acceso PROHIBIDO a ruta SELLER (${pathname}). Usuario ${userId} tiene rol ${role}.`
+      // );
       if (isApiRoute) {
         // Devuelve error 403 para rutas API.
         return createJsonResponse(
