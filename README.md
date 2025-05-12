@@ -1,7 +1,7 @@
 # Sistema POS - Punto de Venta Moderno
 
 <p align="center">
-  <img src="public/pos.svg" alt="Logo Sistema POS" width="200" height="auto">
+  <img src="public/pos.png" alt="Logo Sistema POS" width="200" height="auto">
 </p>
 
 Sistema POS es una aplicación completa de punto de venta desarrollada con Next.js, diseñada para optimizar y modernizar la gestión de ventas, inventario y clientes en comercios minoristas.
@@ -39,7 +39,7 @@ Sistema POS es una aplicación completa de punto de venta desarrollada con Next.
 
 1. Clonar el repositorio:
    ```bash
-   git clone https://github.com/tu-usuario/pos-system.git
+   git clone https://github.com/brizhelito/pos-system.git
    cd pos-system
    ```
 
@@ -147,26 +147,3 @@ El sistema puede personalizarse mediante:
 - **Temas**: Configuración de colores y estilos en `src/lib/config/theme.ts`
 - **Impresión**: Ajustes de formato de recibos en `src/features/sales/config/receipt.ts`
 - **Reportes**: Configuración de visualizaciones en `src/features/reports/config/reports.ts`
-
-## 👥 Contribución
-
-¡Las contribuciones son bienvenidas! Si deseas contribuir:
-
-1. Haz un fork del repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/amazing-feature`)
-3. Haz commit de tus cambios (`git commit -m 'feat: add amazing feature'`)
-4. Haz push a la rama (`git push origin feature/amazing-feature`)
-5. Abre un Pull Request
-
-Consulta la [guía de contribución](docs/CONTRIBUTING.md) para más detalles.
-
-## 📄 Licencia
-
-Este proyecto está licenciado bajo la Licencia MIT - consulta el archivo [LICENSE](LICENSE) para más detalles.
-
-## 📧 Contacto
-
-Para soporte, preguntas o sugerencias, por favor contacta a través de:
-
-- Email: soporte@sistema-pos.com
-- [Crear un Issue](https://github.com/tu-usuario/pos-system/issues)
