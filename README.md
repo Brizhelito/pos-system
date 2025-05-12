@@ -1,7 +1,7 @@
 # Sistema POS - Punto de Venta Moderno
 
 <p align="center">
-  <img src="public/pos-logo.png" alt="Logo Sistema POS" width="200" height="auto">
+  <img src="public/pos.svg" alt="Logo Sistema POS" width="200" height="auto">
 </p>
 
 Sistema POS es una aplicación completa de punto de venta desarrollada con Next.js, diseñada para optimizar y modernizar la gestión de ventas, inventario y clientes en comercios minoristas.
