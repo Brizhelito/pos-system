@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ExportButtons } from "./ExportButtons";
 
 interface SeasonalPatternsChartProps {
   data: SeasonalPattern[];
@@ -54,14 +55,40 @@ export const SeasonalPatternsChart = ({ data }: SeasonalPatternsChartProps) => {
     data[0] || { periodo: "N/A", valorTotal: 0 }
   );
 
+  // Preparar datos para exportación
+  const getExportData = () => {
+    return data.map((item) => ({
+      Periodo: item.periodo,
+      ClientesActivos: item.clientes,
+      Transacciones: item.transacciones,
+      ValorPromedio: item.valorPromedio,
+      ValorTotal: item.valorTotal,
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Patrones Estacionales de Compra</CardTitle>
-          <CardDescription>
-            Análisis del comportamiento de clientes a lo largo del tiempo
-          </CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Patrones Estacionales de Compra</CardTitle>
+              <CardDescription>
+                Análisis del comportamiento de clientes a lo largo del tiempo
+              </CardDescription>
+            </div>
+            <ExportButtons
+              data={getExportData()}
+              filename="patrones-estacionales"
+              numberFields={[
+                "ClientesActivos",
+                "Transacciones",
+                "ValorPromedio",
+                "ValorTotal",
+              ]}
+              title="Patrones Estacionales de Compra"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">

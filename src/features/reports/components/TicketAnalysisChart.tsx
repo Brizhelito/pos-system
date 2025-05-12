@@ -22,6 +22,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TicketAnalysisData } from "../services/sales/salesService";
+import { CURRENCY } from "../config/constants";
+import { ExportButtons } from "./ExportButtons";
 
 interface TicketAnalysisChartProps {
   data: TicketAnalysisData[];
@@ -45,10 +47,28 @@ export function TicketAnalysisChart({ data }: TicketAnalysisChartProps) {
     return partsB[0] - partsA[0]; // día
   });
 
+  // Preparar datos para exportación
+  const getExportData = () => {
+    return data.map((item) => ({
+      Fecha: item.fecha,
+      TicketPromedio: item.promedio,
+      TicketMinimo: item.minimo,
+      TicketMaximo: item.maximo,
+    }));
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Análisis de Ticket Promedio</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>Análisis de Ticket Promedio</CardTitle>
+          <ExportButtons
+            data={getExportData()}
+            filename="analisis-ticket-promedio"
+            numberFields={["TicketPromedio", "TicketMinimo", "TicketMaximo"]}
+            title="Análisis de Ticket Promedio"
+          />
+        </div>
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full mb-6">
@@ -62,10 +82,13 @@ export function TicketAnalysisChart({ data }: TicketAnalysisChartProps) {
               <YAxis />
               <Tooltip
                 formatter={(value: number) => [
-                  new Intl.NumberFormat("es-ES", {
-                    style: "currency",
-                    currency: "EUR",
-                  }).format(value),
+                  new Intl.NumberFormat(
+                    CURRENCY.code === "USD" ? "en-US" : "es-ES",
+                    {
+                      style: "currency",
+                      currency: CURRENCY.code,
+                    }
+                  ).format(value),
                   "Valor",
                 ]}
               />
@@ -118,22 +141,31 @@ export function TicketAnalysisChart({ data }: TicketAnalysisChartProps) {
                   <TableRow key={index}>
                     <TableCell>{item.fecha}</TableCell>
                     <TableCell className="text-right">
-                      {new Intl.NumberFormat("es-ES", {
-                        style: "currency",
-                        currency: "EUR",
-                      }).format(item.promedio)}
+                      {new Intl.NumberFormat(
+                        CURRENCY.code === "USD" ? "en-US" : "es-ES",
+                        {
+                          style: "currency",
+                          currency: CURRENCY.code,
+                        }
+                      ).format(item.promedio)}
                     </TableCell>
                     <TableCell className="text-right">
-                      {new Intl.NumberFormat("es-ES", {
-                        style: "currency",
-                        currency: "EUR",
-                      }).format(item.minimo)}
+                      {new Intl.NumberFormat(
+                        CURRENCY.code === "USD" ? "en-US" : "es-ES",
+                        {
+                          style: "currency",
+                          currency: CURRENCY.code,
+                        }
+                      ).format(item.minimo)}
                     </TableCell>
                     <TableCell className="text-right">
-                      {new Intl.NumberFormat("es-ES", {
-                        style: "currency",
-                        currency: "EUR",
-                      }).format(item.maximo)}
+                      {new Intl.NumberFormat(
+                        CURRENCY.code === "USD" ? "en-US" : "es-ES",
+                        {
+                          style: "currency",
+                          currency: CURRENCY.code,
+                        }
+                      ).format(item.maximo)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -143,10 +175,13 @@ export function TicketAnalysisChart({ data }: TicketAnalysisChartProps) {
           <div className="mt-4 p-4 bg-muted rounded-md">
             <p className="text-sm">
               <span className="font-medium">Ticket promedio general:</span>{" "}
-              {new Intl.NumberFormat("es-ES", {
-                style: "currency",
-                currency: "EUR",
-              }).format(promedioGeneral)}
+              {new Intl.NumberFormat(
+                CURRENCY.code === "USD" ? "en-US" : "es-ES",
+                {
+                  style: "currency",
+                  currency: CURRENCY.code,
+                }
+              ).format(promedioGeneral)}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               El gráfico muestra la evolución del valor de ticket promedio

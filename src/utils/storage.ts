@@ -70,3 +70,32 @@ export const clearStorage = (): void => {
     console.error("Error al limpiar el localStorage:", error);
   }
 };
+
+/**
+ * Limpia el localStorage excepto las claves especificadas
+ * @param preserveKeys Array de claves a preservar
+ */
+export const clearStorageExcept = (preserveKeys: string[] = []): void => {
+  if (!isBrowser) return;
+
+  try {
+    // Guardar valores de las claves a preservar
+    const preservedValues: Record<string, string> = {};
+    preserveKeys.forEach(key => {
+      const value = localStorage.getItem(key);
+      if (value !== null) {
+        preservedValues[key] = value;
+      }
+    });
+
+    // Limpiar todo el localStorage
+    localStorage.clear();
+
+    // Restaurar las claves preservadas
+    Object.entries(preservedValues).forEach(([key, value]) => {
+      localStorage.setItem(key, value);
+    });
+  } catch (error) {
+    console.error("Error al limpiar el localStorage con excepciones:", error);
+  }
+};

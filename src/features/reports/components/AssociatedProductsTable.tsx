@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { AssociatedProductData } from "../services/sales/salesService";
 import { Layers } from "lucide-react";
+import { ExportButtons } from "./ExportButtons";
 
 interface AssociatedProductsTableProps {
   data: AssociatedProductData[];
@@ -21,12 +22,30 @@ interface AssociatedProductsTableProps {
 export function AssociatedProductsTable({
   data,
 }: AssociatedProductsTableProps) {
+  // Preparar datos para exportación
+  const getExportData = () => {
+    return data.map((item) => ({
+      Producto1: item.producto1,
+      Producto2: item.producto2,
+      Frecuencia: item.frecuencia,
+      Correlacion: item.correlacion,
+    }));
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center space-x-2">
-          <Layers className="h-5 w-5 text-primary" />
-          <CardTitle>Productos que se Venden Juntos</CardTitle>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <Layers className="h-5 w-5 text-primary" />
+            <CardTitle>Productos que se Venden Juntos</CardTitle>
+          </div>
+          <ExportButtons
+            data={getExportData()}
+            filename="productos-asociados"
+            numberFields={["Frecuencia", "Correlacion"]}
+            title="Productos que se Venden Juntos"
+          />
         </div>
         <p className="text-sm text-muted-foreground">
           Análisis de productos frecuentemente comprados en la misma transacción

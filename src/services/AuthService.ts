@@ -7,6 +7,7 @@ import {
 } from "@/types/User";
 import z from "zod";
 import bcrypt from "bcrypt";
+import { AUTH_CONFIG } from "@/lib/config/env";
 
 type CreateUser = z.infer<typeof CreateUserSchema>;
 type LoginRequest = z.infer<typeof LoginRequestSchema>;
@@ -38,12 +39,7 @@ export const createUser = async (createUserData: CreateUser) => {
   }
 
   // Hash the password with pepper
-  if (!process.env.BCRYPT_PEPPER) {
-    throw new Error(
-      "BCRYPT_PEPPER is not defined in the environment variables."
-    );
-  }
-  const pepper = process.env.BCRYPT_PEPPER;
+  const pepper = AUTH_CONFIG.bcryptPepper;
   const hashedPassword = await bcrypt.hash(
     createUserData.password + pepper,
     10 // Number of salt rounds
@@ -119,12 +115,8 @@ export const loginUser = async (loginRequest: LoginRequest) => {
   }
   console.log("Login request password:", loginRequest.password);
   console.log("User password:", user.password);
-  if (!process.env.BCRYPT_PEPPER) {
-    throw new Error(
-      "BCRYPT_PEPPER is not defined in the environment variables."
-    );
-  }
-  const pepper = process.env.BCRYPT_PEPPER;
+
+  const pepper = AUTH_CONFIG.bcryptPepper;
   const isPasswordValid = await bcrypt.compare(
     loginRequest.password + pepper,
     user.password

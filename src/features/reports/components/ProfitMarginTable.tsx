@@ -14,6 +14,8 @@ import { Progress } from "@/components/ui/progress";
 import { ProfitMarginData } from "../services/sales/salesService";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp } from "lucide-react";
+import { CURRENCY } from "../config/constants";
+import { ExportButtons } from "./ExportButtons";
 
 interface ProfitMarginTableProps {
   data: ProfitMarginData[];
@@ -79,13 +81,53 @@ export function ProfitMarginTable({ data }: ProfitMarginTableProps) {
     return "bg-red-400";
   };
 
+  // Preparar datos para exportación
+  const getReportData = () => {
+    // Datos de productos para exportar
+    const productData = data.map((item) => ({
+      Producto: item.nombre,
+      Categoría: item.categoria,
+      Unidades: item.unidades,
+      Ingresos: item.ingresos,
+      Costos: item.costos,
+      Margen: item.margen,
+      PorcentajeMargen: item.porcentajeMargen,
+    }));
+
+    // Datos de categorías para exportar
+    const categoryData = categoriesArray.map((item) => ({
+      Categoría: item.categoria,
+      Ingresos: item.ingresos,
+      Costos: item.costos,
+      Margen: item.margen,
+      PorcentajeMargen: item.porcentajeMargen,
+    }));
+
+    // Combinar ambos conjuntos
+    return { productos: productData, categorias: categoryData };
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center space-x-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            <CardTitle>Análisis de Márgenes de Ganancia</CardTitle>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <CardTitle>Análisis de Márgenes de Ganancia</CardTitle>
+            </div>
+            <ExportButtons
+              data={getReportData().productos}
+              filename="margenes-ganancia"
+              numberFields={[
+                "Unidades",
+                "Ingresos",
+                "Costos",
+                "Margen",
+                "PorcentajeMargen",
+              ]}
+              title="Reporte de Márgenes de Ganancia"
+            />
           </div>
           <p className="text-sm text-muted-foreground">
             Productos y categorías más rentables
@@ -96,10 +138,7 @@ export function ProfitMarginTable({ data }: ProfitMarginTableProps) {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-2xl font-bold">
-                  {new Intl.NumberFormat("es-ES", {
-                    style: "currency",
-                    currency: "EUR",
-                  }).format(totalIngresos)}
+                  {CURRENCY.formatWithCode(totalIngresos)}
                 </div>
                 <p className="text-xs text-muted-foreground">Total Ingresos</p>
               </CardContent>
@@ -107,10 +146,7 @@ export function ProfitMarginTable({ data }: ProfitMarginTableProps) {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-2xl font-bold">
-                  {new Intl.NumberFormat("es-ES", {
-                    style: "currency",
-                    currency: "EUR",
-                  }).format(totalMargen)}
+                  {CURRENCY.formatWithCode(totalMargen)}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Total Margen de Ganancia
@@ -131,9 +167,20 @@ export function ProfitMarginTable({ data }: ProfitMarginTableProps) {
 
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium mb-3">
-                Resumen por Categoría
-              </h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-medium">Resumen por Categoría</h3>
+                <ExportButtons
+                  data={getReportData().categorias}
+                  filename="margenes-por-categoria"
+                  numberFields={[
+                    "Ingresos",
+                    "Costos",
+                    "Margen",
+                    "PorcentajeMargen",
+                  ]}
+                  title="Resumen de Márgenes por Categoría"
+                />
+              </div>
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
@@ -151,16 +198,10 @@ export function ProfitMarginTable({ data }: ProfitMarginTableProps) {
                           {category.categoria}
                         </TableCell>
                         <TableCell className="text-right">
-                          {new Intl.NumberFormat("es-ES", {
-                            style: "currency",
-                            currency: "EUR",
-                          }).format(category.ingresos)}
+                          {CURRENCY.format(category.ingresos)}
                         </TableCell>
                         <TableCell className="text-right">
-                          {new Intl.NumberFormat("es-ES", {
-                            style: "currency",
-                            currency: "EUR",
-                          }).format(category.margen)}
+                          {CURRENCY.format(category.margen)}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-end space-x-2">
@@ -212,16 +253,10 @@ export function ProfitMarginTable({ data }: ProfitMarginTableProps) {
                           {item.unidades}
                         </TableCell>
                         <TableCell className="text-right">
-                          {new Intl.NumberFormat("es-ES", {
-                            style: "currency",
-                            currency: "EUR",
-                          }).format(item.ingresos)}
+                          {CURRENCY.format(item.ingresos)}
                         </TableCell>
                         <TableCell className="text-right">
-                          {new Intl.NumberFormat("es-ES", {
-                            style: "currency",
-                            currency: "EUR",
-                          }).format(item.margen)}
+                          {CURRENCY.format(item.margen)}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-end space-x-2">

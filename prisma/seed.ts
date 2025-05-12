@@ -1,14 +1,15 @@
 import { PrismaClient } from "@prisma/client";
+import { APP_CONFIG, TAX_CONFIG, INVOICE_CONFIG } from "../src/lib/config/env";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Crear configuraciones por defecto
+  // Crear configuraciones por defecto basadas en el archivo de entorno
   const defaultConfigs = [
     { key: "default_id_type", value: "VENEZOLANO" },
-    { key: "default_payment_method", value: "EFECTIVO" },
-    { key: "tax_rate", value: "16" },
-    { key: "invoice_prefix", value: "FAC-" },
+    { key: "default_payment_method", value: APP_CONFIG.defaultPaymentMethod },
+    { key: "tax_rate", value: (TAX_CONFIG.rate * 100).toString() },
+    { key: "invoice_prefix", value: INVOICE_CONFIG.prefix },
     { key: "receipt_footer", value: "Gracias por su compra" },
   ];
 

@@ -140,3 +140,39 @@ export class SellerReportsApi {
   }
 }
 export const fetchSellersReport = SellerReportsApi.fetchReport;
+
+/**
+ * Clase que proporciona métodos para acceder a los endpoints de reportes financieros
+ */
+export class FinancesReportsApi {
+  /**
+   * Realiza una petición al API de reportes financieros
+   */
+  static async fetchReport(action: string, params: ReportParams = {}) {
+    try {
+      const response = await fetch("/api/admin/reports/finances", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action,
+          ...params,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error en la petición: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      console.error(
+        `Error al obtener reporte financiero (${action}):`,
+        error
+      );
+      throw error;
+    }
+  }
+}

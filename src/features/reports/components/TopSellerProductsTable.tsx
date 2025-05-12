@@ -33,6 +33,8 @@ import {
   Cell,
 } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CURRENCY } from "../config/constants";
+import { ExportButtons } from "./ExportButtons";
 
 interface TopSellerProductsTableProps {
   data: TopProductBySeller[];
@@ -96,6 +98,17 @@ export function TopSellerProductsTable({
         vendedor: item.vendedor,
       }));
   }, [filteredData]);
+
+  // Preparar datos para exportación
+  const getExportData = () => {
+    return filteredData.map((item) => ({
+      Producto: item.producto,
+      Vendedor: item.vendedor,
+      Categoria: item.categoria,
+      Cantidad: item.cantidad,
+      Total: item.total,
+    }));
+  };
 
   // Calcular estadísticas del resumen
   const stats = useMemo(() => {
@@ -169,36 +182,44 @@ export function TopSellerProductsTable({
     <Card className="w-full">
       <CardContent className="p-6">
         {/* Filtros y búsqueda */}
-        <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-          <div className="relative w-full md:w-1/2">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por producto o categoría..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
-            />
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4 w-full">
+            <div className="relative w-full md:w-1/2">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por producto o categoría..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            <Select
+              value={selectedSeller.toString()}
+              onValueChange={(value) =>
+                setSelectedSeller(
+                  value === "todos" ? "todos" : parseInt(value, 10)
+                )
+              }
+            >
+              <SelectTrigger className="w-full md:w-[250px]">
+                <SelectValue placeholder="Filtrar por vendedor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos los vendedores</SelectItem>
+                {vendedores.map((vendedor) => (
+                  <SelectItem key={vendedor.id} value={vendedor.id.toString()}>
+                    {vendedor.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <Select
-            value={selectedSeller.toString()}
-            onValueChange={(value) =>
-              setSelectedSeller(
-                value === "todos" ? "todos" : parseInt(value, 10)
-              )
-            }
-          >
-            <SelectTrigger className="w-full md:w-[250px]">
-              <SelectValue placeholder="Filtrar por vendedor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos los vendedores</SelectItem>
-              {vendedores.map((vendedor) => (
-                <SelectItem key={vendedor.id} value={vendedor.id.toString()}>
-                  {vendedor.nombre}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ExportButtons
+            data={getExportData()}
+            filename="productos-por-vendedor"
+            numberFields={["Cantidad", "Total"]}
+            title="Productos por Vendedor"
+          />
         </div>
 
         {/* Resumen de estadísticas */}
@@ -234,7 +255,8 @@ export function TopSellerProductsTable({
                 <p className="text-sm text-muted-foreground">Total ventas</p>
               </div>
               <p className="text-2xl font-bold">
-                €{stats.totalVentas.toFixed(2)}
+                {CURRENCY.symbol}
+                {stats.totalVentas.toFixed(2)}
               </p>
             </CardContent>
           </Card>
@@ -261,7 +283,9 @@ export function TopSellerProductsTable({
                     <TableHead>Producto</TableHead>
                     <TableHead>Categoría</TableHead>
                     <TableHead className="text-right">Cantidad</TableHead>
-                    <TableHead className="text-right">Total (€)</TableHead>
+                    <TableHead className="text-right">
+                      Total ({CURRENCY.symbol})
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -288,7 +312,8 @@ export function TopSellerProductsTable({
                           {item.cantidad}
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          €{item.total.toFixed(2)}
+                          {CURRENCY.symbol}
+                          {item.total.toFixed(2)}
                         </TableCell>
                       </TableRow>
                     ))
@@ -326,7 +351,10 @@ export function TopSellerProductsTable({
                     <Tooltip
                       formatter={(value, name) => {
                         if (name === "total")
-                          return [`€${Number(value).toFixed(2)}`, "Total"];
+                          return [
+                            `${CURRENCY.symbol}${Number(value).toFixed(2)}`,
+                            "Total",
+                          ];
                         return [value, "Cantidad"];
                       }}
                       labelFormatter={(label) => `Producto: ${label}`}

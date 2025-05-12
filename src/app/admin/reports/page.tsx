@@ -1,7 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChevronLeft, BarChart, Package, Users } from "lucide-react";
+import {
+  ChevronLeft,
+  BarChart,
+  Package,
+  Users,
+  DollarSign,
+} from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +48,14 @@ export default function AdminReportsPage() {
         "Analiza el desempeño de tus vendedores, tendencias y productos más vendidos",
       icon: <Users className="h-8 w-8" />,
       color: "bg-yellow-500",
+    },
+    {
+      id: "finances",
+      title: "Reportes Financieros",
+      description:
+        "Análisis de rentabilidad, flujo de caja y estado financiero",
+      icon: <DollarSign className="h-8 w-8" />,
+      color: "bg-emerald-500",
     },
   ];
 

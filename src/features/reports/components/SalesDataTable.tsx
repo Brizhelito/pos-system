@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { ExportButtons } from "./ExportButtons";
 import { ReportData } from "../utils/exportUtils";
+import { CURRENCY } from "../config/constants";
 
 export interface SaleItem {
   id: string;
@@ -296,11 +297,11 @@ export function SalesDataTable({
                   <TableCell>{row.producto}</TableCell>
                   <TableCell>{row.categoria}</TableCell>
                   <TableCell className="text-right">
-                    {row.precio.toFixed(2)} €
+                    {row.precio.toFixed(2)} {CURRENCY.symbol}
                   </TableCell>
                   <TableCell className="text-right">{row.cantidad}</TableCell>
                   <TableCell className="text-right">
-                    {row.total.toFixed(2)} €
+                    {row.total.toFixed(2)} {CURRENCY.symbol}
                   </TableCell>
                   <TableCell>{row.vendedor}</TableCell>
                 </TableRow>

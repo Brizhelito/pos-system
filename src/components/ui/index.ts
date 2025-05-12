@@ -32,6 +32,5 @@ export * from './switch';
 export * from './table';
 export * from './tabs';
 export * from './textarea';
-export * from './theme-toggle';
-export * from './toggle-mode';
+export * from "./theme-toggle";
 export * from './tooltip';

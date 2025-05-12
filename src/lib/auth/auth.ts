@@ -6,13 +6,14 @@ import {
 } from "iron-session";
 import { user } from "@prisma";
 import { NextApiRequest, NextApiResponse } from "next";
+import { AUTH_CONFIG } from "@/lib/config/env";
+
 export const sessionOptions: SessionOptions = {
-  password:
-    process.env.SECRET_COOKIE_PASSWORD || "your-secret-password-min-32-chars",
-  cookieName: "app-session",
+  password: AUTH_CONFIG.secretCookiePassword,
+  cookieName: AUTH_CONFIG.cookieName,
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 7, // 1 week
+    maxAge: 60 * 60 * 24 * AUTH_CONFIG.sessionDurationDays, // Duración configurable
   },
 };
 

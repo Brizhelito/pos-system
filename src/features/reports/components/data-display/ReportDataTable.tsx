@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ColumnDef,
   flexRender,
@@ -22,6 +22,8 @@ import {
 import { Pagination } from "../common/Pagination";
 import { ExportButtons } from "../common/ExportButtons";
 import { ReportData } from "../../utils/exportUtils";
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
 
 interface ReportDataTableProps<TData> {
   columns: ColumnDef<TData>[];
@@ -50,7 +52,17 @@ export function ReportDataTable<TData>({
   className = "",
   exportOptions,
 }: ReportDataTableProps<TData>) {
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  // Efecto para manejar el montaje y evitar problemas de hidratación
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Determinar el tema basado en resolvedTheme para manejar correctamente "system"
+  const isDark = mounted && (resolvedTheme === "dark" || theme === "dark");
 
   const table = useReactTable({
     data,
@@ -80,6 +92,19 @@ export function ReportDataTable<TData>({
     ? currentPage
     : table.getState().pagination.pageIndex + 1;
 
+  // Si la componente no está montada aún, mostrar un placeholder para evitar hidratación incorrecta
+  if (!mounted) {
+    return (
+      <div className={`space-y-4 ${className}`}>
+        <div className="animate-pulse h-10 w-full bg-gray-200 dark:bg-gray-800 rounded-md"></div>
+        <div className="rounded-md border">
+          <div className="h-[300px] animate-pulse bg-gray-200 dark:bg-gray-800 rounded-md"></div>
+        </div>
+        <div className="animate-pulse h-10 w-full bg-gray-200 dark:bg-gray-800 rounded-md"></div>
+      </div>
+    );
+  }
+
   return (
     <div className={`space-y-4 ${className}`}>
       {exportOptions && (
@@ -95,13 +120,24 @@ export function ReportDataTable<TData>({
         </div>
       )}
 
-      <div className="rounded-md border">
+      <div
+        className={cn(
+          "rounded-md border",
+          isDark ? "border-gray-700" : "border-gray-200"
+        )}
+      >
         <Table>
-          <TableHeader>
+          <TableHeader className={isDark ? "bg-gray-900/50" : "bg-gray-50/80"}>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow
+                key={headerGroup.id}
+                className={isDark ? "border-gray-700" : "border-gray-200"}
+              >
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    className={isDark ? "text-gray-300" : "text-gray-700"}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -119,6 +155,16 @@ export function ReportDataTable<TData>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={cn(
+                    isDark
+                      ? "border-gray-700 hover:bg-gray-800/50"
+                      : "border-gray-200 hover:bg-gray-100",
+                    row.getIsSelected() && isDark
+                      ? "bg-gray-800"
+                      : row.getIsSelected()
+                      ? "bg-gray-100"
+                      : ""
+                  )}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -131,7 +177,13 @@ export function ReportDataTable<TData>({
                 </TableRow>
               ))
             ) : (
-              <TableRow>
+              <TableRow
+                className={
+                  isDark
+                    ? "border-gray-700 hover:bg-gray-800/50"
+                    : "border-gray-200 hover:bg-gray-100"
+                }
+              >
                 <TableCell
                   colSpan={columns.length}
                   className="h-24 text-center"

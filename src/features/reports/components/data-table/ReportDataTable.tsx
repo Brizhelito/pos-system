@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -26,11 +26,12 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
-import { useState } from "react";
+import { useTheme } from "next-themes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExportButtons } from "../ExportButtons";
 import { ReportData } from "../../utils/exportUtils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 interface ReportDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -77,12 +78,23 @@ export function ReportDataTable<TData extends object, TValue>({
   emptyStateMessage = "No hay datos disponibles para mostrar.",
   children,
 }: ReportDataTableProps<TData, TValue>) {
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
   // Estados para la tabla
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [expanded, setExpanded] = useState<ExpandedState>({});
+
+  // Efecto para manejar el montaje y evitar problemas de hidratación
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Determinar el tema basado en resolvedTheme para manejar correctamente "system"
+  const isDark = mounted && (resolvedTheme === "dark" || theme === "dark");
 
   // Configuración de la tabla
   const table = useReactTable({
@@ -135,6 +147,28 @@ export function ReportDataTable<TData extends object, TValue>({
     );
   };
 
+  // Si la componente no está montada aún, mostrar un placeholder para evitar hidratación incorrecta
+  if (!mounted) {
+    return (
+      <Card className="shadow-sm">
+        {title && (
+          <CardHeader className="pb-3">
+            <div className="animate-pulse h-8 w-1/3 bg-gray-200 dark:bg-gray-800 rounded-md"></div>
+          </CardHeader>
+        )}
+        <CardContent>
+          <div className="space-y-4">
+            <div className="animate-pulse h-10 w-full bg-gray-200 dark:bg-gray-800 rounded-md"></div>
+            <div className="rounded-md border">
+              <div className="h-[300px] animate-pulse bg-gray-200 dark:bg-gray-800 rounded-md"></div>
+            </div>
+            <div className="animate-pulse h-10 w-full bg-gray-200 dark:bg-gray-800 rounded-md"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="shadow-sm">
       {(title || subtitle) && (
@@ -183,15 +217,32 @@ export function ReportDataTable<TData extends object, TValue>({
             renderSkeleton()
           ) : (
             <>
-              <div className="rounded-md border overflow-x-auto">
+              <div
+                className={cn(
+                  "rounded-md border overflow-x-auto",
+                  isDark ? "border-gray-700" : "border-gray-200"
+                )}
+              >
                 <Table>
-                  <TableHeader>
+                  <TableHeader
+                    className={isDark ? "bg-gray-900/50" : "bg-gray-50/80"}
+                  >
                     {table.getHeaderGroups().map((headerGroup) => (
-                      <TableRow key={headerGroup.id}>
+                      <TableRow
+                        key={headerGroup.id}
+                        className={
+                          isDark ? "border-gray-700" : "border-gray-200"
+                        }
+                      >
                         {headerGroup.headers.map((header) => (
                           <TableHead
                             key={header.id}
-                            className="sticky top-0 bg-white z-10"
+                            className={cn(
+                              "sticky top-0 z-10",
+                              isDark
+                                ? "bg-gray-900/90 text-gray-300"
+                                : "bg-white text-gray-700"
+                            )}
                           >
                             {header.isPlaceholder
                               ? null
@@ -209,7 +260,16 @@ export function ReportDataTable<TData extends object, TValue>({
                       table.getRowModel().rows.map((row) => (
                         <React.Fragment key={row.id}>
                           <TableRow
-                            className="even:bg-gray-50 hover:bg-gray-100"
+                            className={cn(
+                              isDark
+                                ? "border-gray-700 hover:bg-gray-800/50"
+                                : "even:bg-gray-50 hover:bg-gray-100 border-gray-200",
+                              row.getIsSelected() && isDark
+                                ? "bg-gray-800"
+                                : row.getIsSelected()
+                                ? "bg-gray-100"
+                                : ""
+                            )}
                             data-state={row.getIsSelected() && "selected"}
                           >
                             {row.getVisibleCells().map((cell) => (
@@ -223,12 +283,21 @@ export function ReportDataTable<TData extends object, TValue>({
                           </TableRow>
                           {/* Sub-componente expandible si existe */}
                           {row.getIsExpanded() && renderRowSubComponent && (
-                            <TableRow>
+                            <TableRow
+                              className={
+                                isDark ? "border-gray-700" : "border-gray-200"
+                              }
+                            >
                               <TableCell
                                 colSpan={row.getVisibleCells().length}
                                 className="p-0"
                               >
-                                <div className="p-4 bg-muted/50 rounded-md m-2">
+                                <div
+                                  className={cn(
+                                    "p-4 rounded-md m-2",
+                                    isDark ? "bg-gray-800/50" : "bg-muted/50"
+                                  )}
+                                >
                                   {renderRowSubComponent(row.original)}
                                 </div>
                               </TableCell>
@@ -237,7 +306,11 @@ export function ReportDataTable<TData extends object, TValue>({
                         </React.Fragment>
                       ))
                     ) : (
-                      <TableRow>
+                      <TableRow
+                        className={
+                          isDark ? "border-gray-700" : "border-gray-200"
+                        }
+                      >
                         <TableCell
                           colSpan={columns.length}
                           className="h-24 text-center"

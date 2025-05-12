@@ -26,6 +26,7 @@ import {
 } from "@/features/reports/reportConfig";
 import { ReportDataTable } from "@/features/reports/components/data-table/ReportDataTable";
 import { AdvancedDateRangePicker } from "@/features/reports/components/ui/AdvancedDateRangePicker";
+import { CURRENCY } from "@/features/reports/config/constants";
 
 // Componente de resumen para análisis RFM
 const RFMSummary = ({
@@ -271,7 +272,8 @@ export default function AdminCustomerReportPage() {
       header: "Valor Total",
       cell: ({ row }) => (
         <div className="font-medium">
-          €{(row.getValue("valorTotal") as number).toFixed(2)}
+          {CURRENCY.symbol}
+          {(row.getValue("valorTotal") as number).toFixed(2)}
         </div>
       ),
     },

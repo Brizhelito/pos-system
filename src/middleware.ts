@@ -10,11 +10,11 @@ const SELLER_ROLE = "SELLER";
 // Rutas públicas que no requieren autenticación
 const PUBLIC_PATHS = ["/api/login", "/api/signup", "/"];
 // Ruta de inicio de sesión
-const LOGIN_PATH = "/login";
+const LOGIN_PATH = "/";
 // Ruta a la que se redirige cuando el acceso es no autorizado o prohibido
 const UNAUTHORIZED_PATH = "/unauthorized";
 // Dashboards específicos por rol
-const ADMIN_DASHBOARD_PATH = "/admin";
+const ADMIN_DASHBOARD_PATH = "/admin/dashboard";
 const SELLER_DASHBOARD_PATH = "/seller/sales";
 // Ruta genérica de dashboard que redirige al específico
 const GENERIC_DASHBOARD_PATH = "/dashboard";
@@ -80,9 +80,6 @@ export async function middleware(request: NextRequest) {
   // --- 3. Verificar Autenticación ---
   // Si no hay sesión, usuario, ID o rol, el usuario no está autenticado.
   if (!session?.user?.id || !session?.user?.role) {
-    console.log(
-      `Intento de acceso no autenticado a ${pathname}. Redirigiendo a ${LOGIN_PATH} o devolviendo 401.`
-    );
     if (isApiRoute) {
       return createJsonResponse(401, "UNAUTHORIZED", "Authentication required");
     } else {
@@ -101,18 +98,12 @@ export async function middleware(request: NextRequest) {
   // --- 4. Redirección desde el Dashboard Genérico ---
   // Si un usuario autenticado va a "/dashboard", redirigirlo a su dashboard específico.
   if (pathname === GENERIC_DASHBOARD_PATH) {
-    console.log(
-      `Usuario ${userId} (${role}) en ${GENERIC_DASHBOARD_PATH}. Redirigiendo...`
-    );
     if (role === ADMIN_ROLE) {
       return NextResponse.redirect(new URL(ADMIN_DASHBOARD_PATH, url));
     } else if (role === SELLER_ROLE) {
       return NextResponse.redirect(new URL(SELLER_DASHBOARD_PATH, url));
     } else {
       // Si el rol no es ni ADMIN ni SELLER, pero el usuario está autenticado.
-      console.warn(
-        `Usuario ${userId} con rol desconocido/no manejado (${role}) intentó acceder a ${GENERIC_DASHBOARD_PATH}. Redirigiendo a ${UNAUTHORIZED_PATH}.`
-      );
       return NextResponse.redirect(new URL(UNAUTHORIZED_PATH, url));
     }
   }

@@ -12,6 +12,8 @@ import {
 import { ArrowDownIcon, ArrowUpIcon, MinusIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ComparativeAnalysisData } from "../services/sales/salesService";
+import { CURRENCY } from "../config/constants";
+import { ExportButtons } from "./ExportButtons";
 
 interface ComparativeAnalysisTableProps {
   data: ComparativeAnalysisData[];
@@ -24,10 +26,13 @@ export function ComparativeAnalysisTable({
   const formatValue = (periodo: string, value: number) => {
     // Si el período contiene "Ingresos", formatear como moneda
     if (periodo.includes("Ingresos")) {
-      return new Intl.NumberFormat("es-ES", {
-        style: "currency",
-        currency: "EUR",
-      }).format(value);
+      return new Intl.NumberFormat(
+        CURRENCY.code === "USD" ? "en-US" : "es-ES",
+        {
+          style: "currency",
+          currency: CURRENCY.code,
+        }
+      ).format(value);
     }
     // Para otros casos (conteos), mostrar solo el número
     return new Intl.NumberFormat("es-ES").format(value);
@@ -47,10 +52,34 @@ export function ComparativeAnalysisTable({
     return <MinusIcon className="h-4 w-4" />;
   };
 
+  // Preparar datos para exportación
+  const getExportData = () => {
+    return data.map((item) => ({
+      Periodo: item.periodo,
+      Actual: item.actual,
+      Anterior: item.anterior,
+      Diferencia: item.diferencia,
+      PorcentajeVariacion: item.porcentaje,
+    }));
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Análisis Comparativo</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>Análisis Comparativo</CardTitle>
+          <ExportButtons
+            data={getExportData()}
+            filename="analisis-comparativo"
+            numberFields={[
+              "Actual",
+              "Anterior",
+              "Diferencia",
+              "PorcentajeVariacion",
+            ]}
+            title="Reporte de Análisis Comparativo"
+          />
+        </div>
       </CardHeader>
       <CardContent>
         <Table>

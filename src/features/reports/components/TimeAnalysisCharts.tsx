@@ -17,6 +17,7 @@ import {
   HourlyAnalysisData,
   WeekdayAnalysisData,
 } from "../services/sales/salesService";
+import { ExportButtons } from "./ExportButtons";
 
 interface TimeAnalysisChartsProps {
   hourlyData: HourlyAnalysisData[];
@@ -44,15 +45,43 @@ export function TimeAnalysisCharts({
     return colors.accent;
   };
 
+  // Preparar datos horarios para exportación
+  const getHourlyExportData = () => {
+    return hourlyData.map((item) => ({
+      Hora: item.hora,
+      Ventas: item.ventas,
+      Porcentaje: item.porcentaje,
+    }));
+  };
+
+  // Preparar datos por día para exportación
+  const getWeekdayExportData = () => {
+    return weekdayData.map((item) => ({
+      Dia: item.dia,
+      Ventas: item.ventas,
+      Porcentaje: item.porcentaje,
+    }));
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Gráfico de ventas por hora */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Ventas por Hora del Día</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Distribución horaria de las ventas
-          </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-lg">Ventas por Hora del Día</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Distribución horaria de las ventas
+              </p>
+            </div>
+            <ExportButtons
+              data={getHourlyExportData()}
+              filename="ventas-por-hora"
+              numberFields={["Ventas", "Porcentaje"]}
+              title="Ventas por Hora del Día"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] w-full">
@@ -100,10 +129,22 @@ export function TimeAnalysisCharts({
       {/* Gráfico de ventas por día de la semana */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Ventas por Día de la Semana</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Distribución semanal de las ventas
-          </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-lg">
+                Ventas por Día de la Semana
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Distribución semanal de las ventas
+              </p>
+            </div>
+            <ExportButtons
+              data={getWeekdayExportData()}
+              filename="ventas-por-dia"
+              numberFields={["Ventas", "Porcentaje"]}
+              title="Ventas por Día de la Semana"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] w-full">

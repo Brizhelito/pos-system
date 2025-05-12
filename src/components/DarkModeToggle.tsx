@@ -1,31 +1,30 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 const DarkModeToggle = () => {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
-  // Cargar la preferencia del usuario al iniciar
+  // Cargar la preferencia del usuario al iniciar, después del montaje para evitar
+  // problemas de hidratación
   useEffect(() => {
-    const isDarkMode = localStorage.getItem("darkMode") === "true";
-    setDarkMode(isDarkMode);
-    applyDarkMode(isDarkMode);
-  }, []);
+    setMounted(true);
+    setDarkMode(theme === "dark");
+  }, [theme]);
 
   const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    applyDarkMode(newDarkMode);
-    localStorage.setItem("darkMode", newDarkMode.toString());
+    const newTheme = darkMode ? "light" : "dark";
+    setDarkMode(!darkMode);
+    setTheme(newTheme);
   };
 
-  const applyDarkMode = (isDarkMode: boolean) => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
+  // Evitamos renderizar durante SSR para prevenir discrepancias de hidratación
+  if (!mounted) {
+    return <div className="w-10 h-10"></div>; // Placeholder para evitar saltos en el layout
+  }
 
   const spring = {
     type: "spring",

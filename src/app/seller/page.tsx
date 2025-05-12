@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   LogOut,
   LucideIcon,
-  BarChart,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -72,26 +71,10 @@ const SellerPage = () => {
     try {
       setIsLoggingOut(true);
 
-      try {
-        // Intentar la llamada POST a /logout
-        await fetch("/api/logout", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-      } catch (fetchError) {
-        // Si falla la solicitud, solo registrarlo y continuar con el logout local
-        console.log("No se pudo contactar el endpoint de logout:", fetchError);
-      }
-
-      // Borrar datos de sesión del localStorage de todas formas
-      localStorage.clear();
-
-      // Redireccionar a la página de login
-      router.push("/");
+      // Redireccionar a la página de logout centralizada
+      router.push("/logout");
     } catch (error) {
-      console.error("Error al cerrar sesión:", error);
+      console.error("Error al redireccionar a logout:", error);
       setIsLoggingOut(false);
     }
   };
@@ -224,16 +207,6 @@ const SellerPage = () => {
             icon={Package}
             colorFrom="from-purple-500"
             colorTo="to-indigo-700"
-          />
-
-          <ModuleCard
-            href="/admin/reports"
-            title="Reportes"
-            description="Visualiza e imprime reportes detallados de ventas, inventario y clientes"
-            icon={BarChart}
-            colorFrom="from-amber-500"
-            colorTo="to-orange-700"
-            badge="Nuevo: Visualizaciones gráficas de datos"
           />
         </motion.div>
 

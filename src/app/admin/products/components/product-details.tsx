@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductWithRelations } from "../columns";
+import { formatCurrency, formatDateTime } from "@/utils/format";
+import { formatPercent } from "@/utils/format";
 
 interface ProductDetailsProps {
   open: boolean;
@@ -24,23 +26,6 @@ export function ProductDetails({
   product,
 }: ProductDetailsProps) {
   if (!product) return null;
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("es-ES", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
-
-  const formatDate = (date: Date | string) => {
-    return new Date(date).toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   const stockStatus =
     product.stock <= product.minStock
@@ -110,12 +95,10 @@ export function ProductDetails({
               <div className="flex justify-between py-1 border-b">
                 <span className="font-medium">Margen de ganancia:</span>
                 <span>
-                  {(
-                    ((product.sellingPrice - product.purchasePrice) /
-                      product.purchasePrice) *
-                    100
-                  ).toFixed(2)}
-                  %
+                  {formatPercent(
+                    (product.sellingPrice - product.purchasePrice) /
+                      product.purchasePrice
+                  )}
                 </span>
               </div>
             </div>
@@ -148,11 +131,11 @@ export function ProductDetails({
             <div className="mt-2 grid grid-cols-1 gap-1 text-sm">
               <div className="flex justify-between py-1 border-b">
                 <span className="font-medium">Creado:</span>
-                <span>{formatDate(product.createdAt)}</span>
+                <span>{formatDateTime(new Date(product.createdAt))}</span>
               </div>
               <div className="flex justify-between py-1 border-b">
                 <span className="font-medium">Última actualización:</span>
-                <span>{formatDate(product.updatedAt)}</span>
+                <span>{formatDateTime(new Date(product.updatedAt))}</span>
               </div>
             </div>
           </div>

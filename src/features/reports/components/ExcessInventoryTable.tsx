@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ReportDataTable } from "./data-table/ReportDataTable";
 import { Card, CardContent } from "@/components/ui/card";
+import { CURRENCY } from "../config/constants";
 
 interface ExcessInventoryTableProps {
   data: ExcessInventoryItem[];
@@ -80,19 +81,25 @@ export function ExcessInventoryTable({
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="text-muted-foreground">Costo unitario:</div>
               <div className="font-medium">
-                {new Intl.NumberFormat("es-ES", {
-                  style: "currency",
-                  currency: "EUR",
-                }).format(item.excessCost / item.excessStock)}
+                {new Intl.NumberFormat(
+                  CURRENCY.code === "USD" ? "en-US" : "es-ES",
+                  {
+                    style: "currency",
+                    currency: CURRENCY.code,
+                  }
+                ).format(item.excessCost / item.excessStock)}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="text-muted-foreground">Valor de exceso:</div>
               <div className="font-medium text-amber-600">
-                {new Intl.NumberFormat("es-ES", {
-                  style: "currency",
-                  currency: "EUR",
-                }).format(item.excessCost)}
+                {new Intl.NumberFormat(
+                  CURRENCY.code === "USD" ? "en-US" : "es-ES",
+                  {
+                    style: "currency",
+                    currency: CURRENCY.code,
+                  }
+                ).format(item.excessCost)}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -263,10 +270,13 @@ export function ExcessInventoryTable({
           const amount = row.getValue("excessCost") as number;
           return (
             <div className="text-right font-medium text-red-500 dark:text-red-400">
-              {new Intl.NumberFormat("es-ES", {
-                style: "currency",
-                currency: "EUR",
-              }).format(amount)}
+              {new Intl.NumberFormat(
+                CURRENCY.code === "USD" ? "en-US" : "es-ES",
+                {
+                  style: "currency",
+                  currency: CURRENCY.code,
+                }
+              ).format(amount)}
             </div>
           );
         },
@@ -350,10 +360,13 @@ export function ExcessInventoryTable({
       <Card className="overflow-hidden border-0 shadow-md bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/40 dark:to-blue-900/20">
         <CardContent className="pt-6">
           <div className="text-2xl font-bold">
-            {new Intl.NumberFormat("es-ES", {
-              style: "currency",
-              currency: "EUR",
-            }).format(totalExcessCost)}
+            {new Intl.NumberFormat(
+              CURRENCY.code === "USD" ? "en-US" : "es-ES",
+              {
+                style: "currency",
+                currency: CURRENCY.code,
+              }
+            ).format(totalExcessCost)}
           </div>
           <p className="text-xs text-muted-foreground">Costo de exceso</p>
         </CardContent>

@@ -24,6 +24,7 @@ import { Pagination } from "@/features/reports/components/Pagination";
 import { ExportButtons } from "@/features/reports/components/ExportButtons";
 import { ReportData } from "@/features/reports/utils/exportUtils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CURRENCY } from "@/features/reports/config/constants";
 
 // Nuevas importaciones para reportes avanzados
 import { StockPredictionTable } from "@/features/reports/components/StockPredictionTable";
@@ -365,7 +366,8 @@ export default function AdminInventoryReportPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  €{totalInventoryCost.toFixed(2)}
+                  {CURRENCY.symbol}
+                  {totalInventoryCost.toFixed(2)}
                 </div>
               </CardContent>
             </Card>
@@ -513,8 +515,12 @@ export default function AdminInventoryReportPage() {
                           </TableCell>
                           <TableCell>{item.categoria}</TableCell>
                           <TableCell>{item.stock}</TableCell>
-                          <TableCell>{item.precio.toFixed(2)} €</TableCell>
-                          <TableCell>{item.valorTotal.toFixed(2)} €</TableCell>
+                          <TableCell>
+                            {item.precio.toFixed(2)} {CURRENCY.symbol}
+                          </TableCell>
+                          <TableCell>
+                            {item.valorTotal.toFixed(2)} {CURRENCY.symbol}
+                          </TableCell>
                           <TableCell>{formatDate(item.ultimaVenta)}</TableCell>
                           <TableCell>
                             <Badge className={getRotationColor(item.rotacion)}>
@@ -579,7 +585,8 @@ export default function AdminInventoryReportPage() {
                         {category.productos}
                       </TableCell>
                       <TableCell className="text-right">
-                        {category.valorTotal.toFixed(2)} €
+                        {CURRENCY.symbol}
+                        {category.valorTotal.toFixed(2)}
                       </TableCell>
                       <TableCell className="text-right">
                         {category.porcentaje.toFixed(1)}%

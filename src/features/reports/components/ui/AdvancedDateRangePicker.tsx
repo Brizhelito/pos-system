@@ -13,7 +13,7 @@ import {
   isSameDay,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { Calendar as CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { DateRange } from "react-day-picker";
 
 import { Button } from "@/components/ui/button";
@@ -23,13 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
+
 import { Card, CardContent } from "@/components/ui/card";
 
 export interface DateRangeOption {
@@ -60,7 +54,6 @@ export function AdvancedDateRangePicker({
   compact = false,
 }: AdvancedDateRangePickerProps) {
   const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
-  const [isPresetOpen, setIsPresetOpen] = React.useState(false);
   const [selectedPresetLabel, setSelectedPresetLabel] =
     React.useState<string>("");
 
@@ -177,7 +170,6 @@ export function AdvancedDateRangePicker({
 
     onChange(rangeToApply);
     setSelectedPresetLabel(preset.label);
-    setIsPresetOpen(false);
     setIsCalendarOpen(false);
   };
 
@@ -229,47 +221,6 @@ export function AdvancedDateRangePicker({
     <div
       className={`flex ${compact ? "flex-col" : "flex-row"} gap-2 ${className}`}
     >
-      {/* Selector de presets */}
-      <Popover open={isPresetOpen} onOpenChange={setIsPresetOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={isPresetOpen}
-            className={`flex justify-between ${
-              compact ? "w-full" : "w-[200px]"
-            }`}
-          >
-            {selectedPresetLabel || "Rangos predefinidos"}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-0">
-          <Command>
-            <CommandInput placeholder="Buscar rango..." />
-            <CommandEmpty>No se encontraron rangos.</CommandEmpty>
-            <CommandGroup className="max-h-[300px] overflow-auto">
-              {presets.map((preset) => (
-                <CommandItem
-                  key={preset.value}
-                  value={preset.value}
-                  onSelect={() => applyPreset(preset)}
-                >
-                  <Check
-                    className={`mr-2 h-4 w-4 ${
-                      selectedPresetLabel === preset.label
-                        ? "opacity-100"
-                        : "opacity-0"
-                    }`}
-                  />
-                  {preset.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </Command>
-        </PopoverContent>
-      </Popover>
-
       {/* Selector de calendario */}
       <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
         <PopoverTrigger asChild>

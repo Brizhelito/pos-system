@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { DateRange } from "react-day-picker";
 import { SalesReportsApi } from "@/features/reports/utils/reportServices";
 import { format } from "date-fns";
+import { CURRENCY } from "@/features/reports/config/constants";
 
 // Importación de componentes reutilizables
 import { AdvancedDateRangePicker } from "@/features/reports/components/ui/AdvancedDateRangePicker";
@@ -318,12 +319,12 @@ export default function AdminSalesReportPage() {
       },
       {
         title: "Total Ingresos",
-        value: `€${totalIngresos.toFixed(2)}`,
+        value: `${CURRENCY.symbol}${totalIngresos.toFixed(2)}`,
         icon: BarChart2,
       },
       {
         title: "Promedio por Venta",
-        value: `€${promedioVenta.toFixed(2)}`,
+        value: `${CURRENCY.symbol}${promedioVenta.toFixed(2)}`,
         icon: ListFilter,
       },
       {

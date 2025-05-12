@@ -4,6 +4,7 @@ import { ProcessSaleSchema } from "@/features/sales/api/validation";
 import { PaymentMethod } from "@/features/sales/types";
 import { getIronSession, IronSessionData } from "iron-session";
 import { sessionOptions } from "@/lib/auth/auth";
+import { INVOICE_CONFIG } from "@/lib/config/env";
 
 const prisma = new PrismaClient();
 
@@ -106,8 +107,8 @@ export async function POST(request: Request) {
       }
 
       // 5. Crear factura
-      // Generamos un prefijo predeterminado ya que la tabla config aún no está implementada
-      const invoicePrefix = "FAC-";
+      // Usar el prefijo de factura de la configuración centralizada
+      const invoicePrefix = INVOICE_CONFIG.prefix;
       const invoiceNumber = `${invoicePrefix}${newSale.id}`;
 
       const invoice = await tx.invoice.create({

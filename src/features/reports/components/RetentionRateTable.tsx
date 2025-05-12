@@ -20,6 +20,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { ExportButtons } from "./ExportButtons";
 
 interface RetentionRateTableProps {
   data: RetentionData[];
@@ -53,14 +54,40 @@ export const RetentionRateTable = ({ data }: RetentionRateTableProps) => {
       : "negative";
   };
 
+  // Preparar datos para exportación
+  const getExportData = () => {
+    return data.map((item) => ({
+      Periodo: item.periodo,
+      NuevosClientes: item.nuevos,
+      ClientesRecurrentes: item.recurrentes,
+      ClientesPerdidos: item.perdidos,
+      TasaRetencion: item.tasaRetencion,
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Tasa de Retención de Clientes</CardTitle>
-          <CardDescription>
-            Análisis de los clientes que regresan cada mes
-          </CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Tasa de Retención de Clientes</CardTitle>
+              <CardDescription>
+                Análisis de los clientes que regresan cada mes
+              </CardDescription>
+            </div>
+            <ExportButtons
+              data={getExportData()}
+              filename="tasa-retencion-clientes"
+              numberFields={[
+                "NuevosClientes",
+                "ClientesRecurrentes",
+                "ClientesPerdidos",
+                "TasaRetencion",
+              ]}
+              title="Reporte de Tasa de Retención de Clientes"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="h-[400px] w-full">

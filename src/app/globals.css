@@ -1,7 +1,6 @@
 /* Importa las utilidades base de Tailwind */
 @import "tailwindcss";
 /* Opcional: Importa animaciones si las usas */
-@import "tw-animate-css";
 
 /* Variante personalizada para aplicar estilos dentro de .dark (opcional, pero útil) */
 @custom-variant dark (&:is(.dark *));

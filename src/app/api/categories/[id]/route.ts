@@ -14,8 +14,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
   try {
+    const { id } = await params;
+
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
       request,
@@ -52,8 +53,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
   try {
+    const { id } = await params;
+
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
       request,
@@ -105,8 +107,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
   try {
+    const { id } = await params;
+
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
       request,

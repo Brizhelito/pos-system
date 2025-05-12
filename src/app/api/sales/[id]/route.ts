@@ -12,10 +12,11 @@ import { SaleUpdateSchema } from "@/types/Sale";
 // GET: Obtener una venta específica por ID
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params;
   try {
+    const { id } = await params;
+
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
       request,
@@ -52,8 +53,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
   try {
+    const { id } = await params;
+
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
       request,
@@ -61,8 +63,8 @@ export async function PUT(
       sessionOptions
     );
 
-    // Verificar que el usuario esté autenticado y tenga permisos de administrador
-    if (!session.user || session.user.role !== "ADMIN") {
+    // Verificar que el usuario esté autenticado
+    if (!session.user) {
       return NextResponse.json(
         { message: "No autorizado para actualizar ventas" },
         { status: 403 }
@@ -105,8 +107,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
   try {
+    const { id } = await params;
+
     // Verificar autenticación
     const session = await getIronSession<IronSessionData>(
       request,

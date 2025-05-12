@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   ShoppingCart,
   Package,
-  Settings,
   BarChart4,
   LogOut,
   ChevronRight,
@@ -92,7 +91,7 @@ export function Sidebar({
     {
       icon: <ShoppingCart />,
       label: "Ventas",
-      href: "/sales",
+      href: "/admin/reports/sales",
     },
     {
       icon: <Package />,
@@ -102,7 +101,7 @@ export function Sidebar({
     {
       icon: <Store />,
       label: "Inventario",
-      href: "/admin/inventory",
+      href: "/admin/reports/inventory",
     },
     {
       icon: <FileText />,
@@ -117,17 +116,12 @@ export function Sidebar({
     {
       icon: <UserCircle />,
       label: "Clientes",
-      href: "/admin/customers",
+      href: "/admin/reports/customers",
     },
     {
       icon: <BarChart4 />,
       label: "Reportes",
       href: "/admin/reports",
-    },
-    {
-      icon: <Settings />,
-      label: "Configuración",
-      href: "/admin/settings",
     },
   ];
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -23,7 +24,8 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
-import { useState } from "react";
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
 
 interface DataTableAdvancedProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -51,10 +53,19 @@ export function DataTableAdvanced<TData, TValue>({
   filterOptions,
   addNewButton,
 }: DataTableAdvancedProps<TData, TValue>) {
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+
+  // Efecto para manejar el montaje y evitar problemas de hidratación
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted && (resolvedTheme === "dark" || theme === "dark");
 
   const table = useReactTable({
     data,
@@ -75,24 +86,52 @@ export function DataTableAdvanced<TData, TValue>({
     },
   });
 
+  // Si la componente no está montada aún, mostrar un placeholder para evitar hidratación incorrecta
+  if (!mounted) {
+    return (
+      <div className="space-y-4">
+        <div className="animate-pulse h-10 w-full bg-gray-200 dark:bg-gray-800 rounded-md"></div>
+        <div className="rounded-md border">
+          <div className="h-[300px] animate-pulse bg-gray-200 dark:bg-gray-800 rounded-md"></div>
+        </div>
+        <div className="animate-pulse h-10 w-full bg-gray-200 dark:bg-gray-800 rounded-md"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <DataTableToolbar 
-        table={table} 
+      <DataTableToolbar
+        table={table}
         searchColumn={searchColumn}
         searchPlaceholder={searchPlaceholder}
         filterColumn={filterColumn}
         filterOptions={filterOptions}
         addNewButton={addNewButton}
       />
-      <div className="rounded-md border">
+      <div
+        className={cn(
+          "rounded-md border",
+          isDark ? "border-gray-700" : "border-gray-200"
+        )}
+      >
         <Table>
-          <TableHeader>
+          <TableHeader className={isDark ? "bg-gray-900/50" : "bg-gray-50/80"}>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow
+                key={headerGroup.id}
+                className={
+                  isDark
+                    ? "border-gray-700 hover:bg-gray-800/50"
+                    : "border-gray-200 hover:bg-gray-100/50"
+                }
+              >
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead
+                      key={header.id}
+                      className={isDark ? "text-gray-300" : "text-gray-700"}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -111,17 +150,37 @@ export function DataTableAdvanced<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={cn(
+                    isDark
+                      ? "border-gray-700 hover:bg-gray-800/50"
+                      : "border-gray-200 hover:bg-gray-100",
+                    row.getIsSelected() && isDark
+                      ? "bg-gray-800"
+                      : row.getIsSelected()
+                      ? "bg-gray-100"
+                      : ""
+                  )}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+              <TableRow
+                className={
+                  isDark ? "hover:bg-gray-800/50" : "hover:bg-gray-100"
+                }
+              >
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No se encontraron resultados.
                 </TableCell>
               </TableRow>

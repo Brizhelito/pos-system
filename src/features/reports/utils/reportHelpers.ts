@@ -1,5 +1,7 @@
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { PeriodComparison } from "../types";
+import { CURRENCY_CONFIG } from "@/lib/config/env";
+import { formatCurrency as formatGlobalCurrency } from "@/utils/format";
 
 /**
  * Formatea una fecha como string según el formato especificado
@@ -16,13 +18,21 @@ export const formatDate = (
  */
 export const formatCurrency = (
   value: number,
-  currency: string = "EUR"
+  currency: string = CURRENCY_CONFIG.code
 ): string => {
-  return new Intl.NumberFormat("es-ES", {
+  return new Intl.NumberFormat(CURRENCY_CONFIG.locale, {
     style: "currency",
     currency,
     minimumFractionDigits: 2,
   }).format(value);
+};
+
+/**
+ * Formatea un número como moneda usando la configuración global
+ * @deprecated Use formatCurrency directly or import it from @/utils/format
+ */
+export const formatMoney = (value: number): string => {
+  return formatGlobalCurrency(value);
 };
 
 /**

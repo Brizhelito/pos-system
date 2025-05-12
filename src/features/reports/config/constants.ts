@@ -7,11 +7,18 @@
  * Última actualización: Mayo 2023
  */
 
+import { CURRENCY_CONFIG } from "@/lib/config/env";
+
 // Configuración de moneda
 export const CURRENCY = {
-  symbol: "€",
-  code: "EUR",
-  name: "Euro",
+  symbol: CURRENCY_CONFIG.symbol,
+  code: CURRENCY_CONFIG.code,
+  name:
+    CURRENCY_CONFIG.code === "USD"
+      ? "Dólar"
+      : CURRENCY_CONFIG.code === "EUR"
+      ? "Euro"
+      : "Desconocido",
   format: (value: number) => `${CURRENCY.symbol}${value.toFixed(2)}`,
   formatWithCode: (value: number) =>
     `${CURRENCY.symbol}${value.toFixed(2)} ${CURRENCY.code}`,

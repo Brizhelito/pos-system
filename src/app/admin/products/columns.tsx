@@ -226,6 +226,12 @@ export const productColumns: ColumnDef<ProductWithRelations>[] = [
               Editar
             </DropdownMenuItem>
             <DropdownMenuItem
+              onClick={() => window.productActions?.onAddStock(product)}
+            >
+              Agregar existencias
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
               onClick={() => window.productActions?.onDelete(product)}
               className="text-destructive"
             >
@@ -245,6 +251,7 @@ declare global {
       onView: (product: ProductWithRelations) => void;
       onEdit: (product: ProductWithRelations) => void;
       onDelete: (product: ProductWithRelations) => void;
+      onAddStock: (product: ProductWithRelations) => void;
     };
   }
 }
