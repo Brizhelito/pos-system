@@ -48,10 +48,6 @@ export function ProviderDetails({
                 <span>{provider.name}</span>
               </div>
               <div className="flex justify-between py-1 border-b">
-                <span className="font-medium">Información de Contacto:</span>
-                <span>{provider.contactInfo || "No especificada"}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b">
                 <span className="font-medium">Producto Asociado:</span>
                 <span>
                   {provider.Product ? (

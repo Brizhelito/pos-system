@@ -26,7 +26,6 @@ import {
 
 const providerFormSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
-  contactInfo: z.string().optional(),
 });
 
 type ProviderFormValues = z.infer<typeof providerFormSchema>;
@@ -50,7 +49,6 @@ export function ProviderForm({
     resolver: zodResolver(providerFormSchema),
     defaultValues: {
       name: provider?.name || "",
-      contactInfo: provider?.contactInfo || "",
     },
   });
 
@@ -106,19 +104,6 @@ export function ProviderForm({
                   <FormLabel>Nombre</FormLabel>
                   <FormControl>
                     <Input placeholder="Nombre del proveedor" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="contactInfo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Información de Contacto</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Información de contacto" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

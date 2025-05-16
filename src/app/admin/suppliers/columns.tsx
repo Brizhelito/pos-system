@@ -17,7 +17,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 export type Provider = {
   id: number;
   name: string;
-  contactInfo: string;
   Product?: {
     id: number;
     name: string;
@@ -64,25 +63,6 @@ export const providerColumns: ColumnDef<Provider>[] = [
     },
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("name")}</div>
-    ),
-  },
-  {
-    accessorKey: "contactInfo",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Información de Contacto
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="max-w-[200px] truncate">
-        {row.getValue("contactInfo") || "-"}
-      </div>
     ),
   },
   {

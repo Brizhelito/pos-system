@@ -3,7 +3,6 @@ import { z } from "zod";
 // --- Base Schema ---
 export const ProviderBaseSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
-  contactInfo: z.string().min(1, "La información de contacto es requerida"),
 });
 
 // --- Create Schema ---
