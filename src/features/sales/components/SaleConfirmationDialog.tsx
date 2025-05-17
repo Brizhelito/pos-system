@@ -204,14 +204,24 @@ const SaleConfirmationDialog: React.FC<SaleConfirmationDialogProps> = ({
           <div>
             <div className="flex justify-between text-sm mb-1">
               <span>Subtotal:</span>
-              <span>{formatCurrency(total * (1 - TAX_CONFIG.rate))}</span>
-            </div>
-            <div className="flex justify-between text-sm mb-1">
               <span>
-                {TAX_CONFIG.label} ({TAX_CONFIG.percentage}):
+                {formatCurrency(
+                  total - TAX_CONFIG.calculate(total / (1 + TAX_CONFIG.rate))
+                )}
               </span>
-              <span>{formatCurrency(total * TAX_CONFIG.rate)}</span>
             </div>
+            {TAX_CONFIG.enabled && (
+              <div className="flex justify-between text-sm mb-1">
+                <span>
+                  {TAX_CONFIG.label} ({TAX_CONFIG.percentage}):
+                </span>
+                <span>
+                  {formatCurrency(
+                    TAX_CONFIG.calculate(total / (1 + TAX_CONFIG.rate))
+                  )}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between font-bold">
               <span>TOTAL:</span>
               <span>{formatCurrency(total)}</span>

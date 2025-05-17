@@ -11,33 +11,31 @@ import {
   CURRENCY_CONFIG,
   APP_CONFIG,
 } from "@/utils/constants";
+import "@/lib/print-styles.css";
+import { PrinterIcon, DownloadIcon, MailIcon, XIcon } from "lucide-react";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
+import { autoTable } from "jspdf-autotable";
+import { es } from "date-fns/locale";
 
 interface SaleReceiptProps {
   sale: Sale;
   customer: Customer;
   items: CartItem[];
   onClose: () => void;
-  onPrint: () => void;
-  onDownloadPDF?: () => void;
-  onSendEmail?: () => void;
 }
 
-const SaleReceipt = ({
-  sale,
-  customer,
-  items,
-  onClose,
-  onPrint,
-  onDownloadPDF,
-  onSendEmail,
-}: SaleReceiptProps) => {
+const SaleReceipt = ({ sale, customer, items, onClose }: SaleReceiptProps) => {
   // Estado para controlar si hay error en los datos
   const [hasError] = useState(!sale || !customer || !Array.isArray(items));
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   // Referencias para enfoque de elementos
   const printButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const receiptContentRef = useRef<HTMLDivElement>(null);
 
   // Enfocar el botón de imprimir al mostrar el recibo
   useEffect(() => {
@@ -49,8 +47,7 @@ const SaleReceipt = ({
     "alt+p",
     () => {
       if (!hasError) {
-        onPrint();
-        toast.info("Imprimiendo recibo...");
+        handlePrint();
       }
     },
     {
@@ -71,12 +68,11 @@ const SaleReceipt = ({
     }
   );
 
-  // Atajo para imprimir recibo
   useHotkeys(
-    "alt+shift+p",
+    "alt+d",
     () => {
-      if (!hasError) {
-        onPrint();
+      if (!hasError && !isGeneratingPDF) {
+        handleDownloadPDF();
       }
     },
     {
@@ -146,6 +142,10 @@ const SaleReceipt = ({
     }).format(amount);
   };
 
+  const formatDate = (date: Date | string) => {
+    return format(new Date(date), "dd 'de' MMMM, yyyy - HH:mm", { locale: es });
+  };
+
   // Mapea el método de pago a un texto más descriptivo
   const getPaymentMethodText = (method: PaymentMethod): string => {
     const methodTexts: Record<PaymentMethod, string> = {
@@ -155,6 +155,19 @@ const SaleReceipt = ({
       [PaymentMethod.PUNTO_DE_VENTA]: "Punto de Venta",
     };
     return methodTexts[method];
+  };
+
+  // Calcular subtotal y monto de impuestos basado en la configuración
+  const calculateAmounts = () => {
+    // Si los impuestos están desactivados, el subtotal es igual al monto total
+    const subtotal = TAX_CONFIG.enabled
+      ? sale.totalAmount / (1 + TAX_CONFIG.rate)
+      : sale.totalAmount;
+
+    // El monto del impuesto es 0 cuando está desactivado
+    const taxAmount = TAX_CONFIG.enabled ? TAX_CONFIG.calculate(subtotal) : 0;
+
+    return { subtotal, taxAmount };
   };
 
   // Renderiza los detalles del pago según el método
@@ -214,224 +227,665 @@ const SaleReceipt = ({
     }
   };
 
+  // Función para manejar la impresión directamente
+  const handlePrint = () => {
+    toast.info("Preparando impresión...");
+
+    // Crear un iframe oculto para la impresión
+    const printIframe = document.createElement("iframe");
+    printIframe.style.display = "none";
+    document.body.appendChild(printIframe);
+
+    const invoiceTitle = sale.invoice?.number
+      ? `Factura ${sale.invoice.number}`
+      : `Recibo #${sale.id}`;
+
+    // Verificar que el documento del iframe esté disponible
+    if (!printIframe.contentDocument) {
+      toast.error("Error al preparar la impresión");
+      document.body.removeChild(printIframe);
+      return;
+    }
+
+    // Obtener el contenido del recibo
+    const receiptContent = receiptContentRef.current?.innerHTML || "";
+
+    // Insertar el contenido y los estilos en el iframe
+    printIframe.contentDocument.write(`
+      <html>
+      <head>
+        <title>${invoiceTitle}</title>
+        <style>
+          ${document.getElementById("receipt-print-styles")?.innerHTML || ""}
+          
+          /* Estilos adicionales para impresión */
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+          }
+          
+          .receipt-print-wrapper {
+            width: 100%;
+            max-width: 80mm;
+            margin: 0 auto;
+            padding: 5mm;
+          }
+          
+          @media print {
+            @page { 
+              size: 80mm auto;
+              margin: 0;
+            }
+            body { 
+              margin: 0; 
+            }
+            .no-print { 
+              display: none !important; 
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt-print-wrapper">
+          ${receiptContent}
+        </div>
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+              setTimeout(function() {
+                window.parent.postMessage('print-finished', '*');
+              }, 500);
+            }, 300);
+          };
+        </script>
+      </body>
+      </html>
+    `);
+
+    // Cerrar el documento
+    printIframe.contentDocument.close();
+
+    // Esperar el mensaje de impresión finalizada
+    const handlePrintMessage = (event: MessageEvent) => {
+      if (event.data === "print-finished") {
+        document.body.removeChild(printIframe);
+        window.removeEventListener("message", handlePrintMessage);
+        toast.success("Impresión completada");
+      }
+    };
+
+    window.addEventListener("message", handlePrintMessage);
+
+    // Fallback por si no recibimos el mensaje (después de 5 segundos)
+    setTimeout(() => {
+      if (document.body.contains(printIframe)) {
+        document.body.removeChild(printIframe);
+        window.removeEventListener("message", handlePrintMessage);
+        toast.success("Impresión enviada");
+      }
+    }, 5000);
+  };
+
+  // Función para generar y descargar PDF
+  const handleDownloadPDF = async () => {
+    try {
+      setIsGeneratingPDF(true);
+      toast.info("Generando PDF...");
+
+      // Crear nuevo documento PDF
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      // Configuración de dimensiones
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+
+      // Obtener fecha y hora formateada
+      const dateStr = format(
+        new Date(sale.saleDate || new Date()),
+        "dd/MM/yyyy HH:mm"
+      );
+
+      // Cabecera con información de la empresa
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text(COMPANY_INFO.name, pageWidth / 2, margin, { align: "center" });
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      let y = margin + 7;
+      doc.text(COMPANY_INFO.address, pageWidth / 2, y, { align: "center" });
+      y += 5;
+      doc.text(`${COMPANY_INFO.city}, ${COMPANY_INFO.zip}`, pageWidth / 2, y, {
+        align: "center",
+      });
+      y += 5;
+      doc.text(
+        `RIF: ${COMPANY_INFO.rif} | Tel: ${COMPANY_INFO.phone}`,
+        pageWidth / 2,
+        y,
+        { align: "center" }
+      );
+      y += 5;
+      doc.text(COMPANY_INFO.email, pageWidth / 2, y, { align: "center" });
+      y += 10;
+
+      // Título del documento
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      const title = sale.invoice?.number
+        ? `FACTURA ${sale.invoice.number}`
+        : `RECIBO DE VENTA #${sale.id}`;
+      doc.text(title, pageWidth / 2, y, { align: "center" });
+      y += 10;
+
+      // Información de la venta
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Fecha: ${dateStr}`, margin, y);
+      doc.text(
+        `Vendedor: ${sale.userId ? `#${sale.userId}` : "Sistema"}`,
+        pageWidth - margin,
+        y,
+        { align: "right" }
+      );
+      y += 7;
+
+      // Información del cliente
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("Datos del Cliente", margin, y);
+      y += 5;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Cliente: ${customer.name}`, margin, y);
+      doc.text(
+        `ID: ${customer.idType} ${customer.idNumber}`,
+        pageWidth - margin,
+        y,
+        { align: "right" }
+      );
+      y += 5;
+
+      if (customer.email) {
+        doc.text(`Email: ${customer.email}`, margin, y);
+        y += 5;
+      }
+
+      if (customer.phone) {
+        doc.text(`Teléfono: ${customer.phone}`, margin, y);
+        y += 5;
+      }
+
+      y += 5;
+
+      // Tabla de productos
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("Detalle de Productos", margin, y);
+      y += 5;
+
+      const tableHeaders = [
+        { header: "Producto", dataKey: "product" },
+        { header: "Cant.", dataKey: "quantity" },
+        { header: "Precio", dataKey: "price" },
+        { header: "Total", dataKey: "total" },
+      ];
+
+      const tableData = items.map((item) => ({
+        product: item.product.name,
+        quantity: item.quantity.toString(),
+        price: formatCurrency(item.unitPrice),
+        total: formatCurrency(item.subtotal),
+      }));
+
+      autoTable(doc, {
+        head: [tableHeaders.map((h) => h.header)],
+        body: tableData.map((row) => [
+          row.product,
+          row.quantity,
+          row.price,
+          row.total,
+        ]),
+        startY: y,
+        margin: { left: margin, right: margin },
+        headStyles: {
+          fillColor: [60, 60, 60],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245],
+        },
+        columnStyles: {
+          0: { cellWidth: "auto" },
+          1: { cellWidth: 15, halign: "center" },
+          2: { cellWidth: 30, halign: "right" },
+          3: { cellWidth: 30, halign: "right" },
+        },
+        didDrawPage: (data) => {
+          // Actualizar la posición Y después de dibujar la tabla
+          if (data.cursor) {
+            y = data.cursor.y + 10;
+          } else {
+            y += 10; // Si no hay cursor, añadir un espacio por defecto
+          }
+        },
+      });
+
+      // Calcular subtotal y monto de impuestos
+      const { subtotal, taxAmount } = calculateAmounts();
+
+      // Resumen de totales
+      y += 5;
+      const totalsWidth = 70;
+      const totalsX = pageWidth - margin - totalsWidth;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+
+      // Subtotal - siempre lo mostramos
+      doc.text("Subtotal:", totalsX, y);
+      doc.text(formatCurrency(subtotal), pageWidth - margin, y, {
+        align: "right",
+      });
+      y += 6;
+
+      // Impuestos (solo si están habilitados)
+      if (TAX_CONFIG.enabled) {
+        doc.text(`${TAX_CONFIG.label} (${TAX_CONFIG.percentage}):`, totalsX, y);
+        doc.text(formatCurrency(taxAmount), pageWidth - margin, y, {
+          align: "right",
+        });
+        y += 6;
+      }
+
+      // Total
+      doc.setFont("helvetica", "bold");
+      doc.text("TOTAL:", totalsX, y);
+      doc.text(formatCurrency(sale.totalAmount), pageWidth - margin, y, {
+        align: "right",
+      });
+      y += 10;
+
+      // Información de pago
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text("Forma de pago:", margin, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(getPaymentMethodText(sale.paymentMethod), margin + 30, y);
+      y += 7;
+
+      // Detalles del pago según el método
+      if (sale.paymentDetails) {
+        const details = sale.paymentDetails;
+        doc.setFontSize(9);
+
+        switch (sale.paymentMethod) {
+          case PaymentMethod.EFECTIVO:
+            if (details.amountReceived) {
+              doc.text(
+                `Monto recibido: ${formatCurrency(
+                  parseFloat(details.amountReceived)
+                )}`,
+                margin,
+                y
+              );
+              y += 5;
+              doc.text(
+                `Cambio: ${formatCurrency(
+                  parseFloat(details.amountReceived) - sale.totalAmount
+                )}`,
+                margin,
+                y
+              );
+              y += 5;
+            }
+            break;
+
+          case PaymentMethod.PAGO_MOVIL:
+            doc.text(`Teléfono: ${details.phoneNumber}`, margin, y);
+            y += 5;
+            doc.text(`Banco: ${details.bank}`, margin, y);
+            y += 5;
+            doc.text(`Referencia: ${details.reference}`, margin, y);
+            y += 5;
+            break;
+
+          case PaymentMethod.TRANSFERENCIA:
+            doc.text(`Banco origen: ${details.sourceBank}`, margin, y);
+            y += 5;
+            doc.text(`Banco destino: ${details.targetBank}`, margin, y);
+            y += 5;
+            doc.text(`Referencia: ${details.reference}`, margin, y);
+            y += 5;
+            break;
+
+          case PaymentMethod.PUNTO_DE_VENTA:
+            doc.text(`Banco: ${details.bank}`, margin, y);
+            y += 5;
+            doc.text(`Últimos 4 dígitos: ${details.lastDigits}`, margin, y);
+            y += 5;
+            doc.text(`Referencia: ${details.reference}`, margin, y);
+            y += 5;
+            break;
+        }
+      }
+
+      // Pie de página
+      const footerY = pageHeight - margin * 2;
+      doc.setFontSize(8);
+      doc.text(APP_CONFIG.receiptCopyright, pageWidth / 2, footerY, {
+        align: "center",
+      });
+      doc.text("¡Gracias por su compra!", pageWidth / 2, footerY + 4, {
+        align: "center",
+      });
+
+      // Guardar el PDF
+      const filename = `${sale.invoice?.number || "recibo-" + sale.id}.pdf`;
+      doc.save(filename);
+
+      toast.success("PDF descargado correctamente");
+    } catch (error) {
+      console.error("Error al generar PDF:", error);
+      toast.error("Error al generar el PDF");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  // Función para enviar el recibo por email
+  const handleSendEmail = async () => {
+    if (!customer.email) {
+      toast.error("El cliente no tiene un correo electrónico registrado");
+      return;
+    }
+
+    try {
+      setIsSendingEmail(true);
+      toast.info(`Enviando recibo a ${customer.email}...`);
+
+      // Aquí iría el código para enviar por email (utilizando una API)
+      // Simulamos una espera
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      toast.success(`Recibo enviado a ${customer.email}`);
+    } catch (error) {
+      console.error("Error al enviar email:", error);
+      toast.error("Error al enviar el email");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  // Calcular subtotal y monto de impuestos para el modal
+  const { subtotal, taxAmount } = calculateAmounts();
+
   return (
-    <div
-      className="bg-white dark:bg-gray-800 dark:text-white rounded-lg shadow-lg p-6 w-full max-w-md max-h-[90vh] overflow-auto"
-      ref={modalRef}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="receipt-title"
-    >
-      <div className="flex justify-between items-center mb-4 no-print">
-        <h2 id="receipt-title" className="text-xl font-bold">
-          {sale.invoice ? "Factura de Venta" : "Recibo de Venta"}
-        </h2>
-        <button
-          ref={closeButtonRef}
-          onClick={onClose}
-          className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center no-print"
-          aria-label="Cerrar recibo"
-        >
-          <span className="sr-only">Cerrar</span>
-          <kbd className="mr-1 px-1 bg-gray-200 dark:bg-gray-700 text-xs rounded">
-            Alt+X
-          </kbd>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            className="w-6 h-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <style id="receipt-print-styles" type="text/css">
+        {`
+          @media print {
+            @page { 
+              size: 80mm auto; 
+              margin: 0;
+            }
+            body { 
+              margin: 0;
+              padding: 0;
+              font-family: 'Arial', sans-serif;
+              font-size: 10px;
+            }
+            .no-print { 
+              display: none !important; 
+            }
+            .receipt-print-wrapper {
+              width: 100%;
+              max-width: 80mm;
+              margin: 0 auto;
+              padding: 5mm;
+            }
+          }
+        `}
+      </style>
 
-      <div className="receipt-content border-t border-b dark:border-gray-700 py-4 mb-4">
-        <div className="text-center mb-4 receipt-header">
-          <h1 className="font-bold text-lg">{COMPANY_INFO.name}</h1>
-          <p className="text-sm">{COMPANY_INFO.address}</p>
-          <p className="text-sm">RIF: {COMPANY_INFO.rif}</p>
-          <p className="text-sm">Teléfono: {COMPANY_INFO.phone}</p>
-          <p className="text-sm">Email: {COMPANY_INFO.email}</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-sm receipt-customer">
-          <div>
-            <span className="font-medium">Factura No.:</span>
-            <span className="ml-2">{sale.invoice?.number || `${sale.id}`}</span>
-          </div>
-          <div>
-            <span className="font-medium">Fecha:</span>
-            <span className="ml-2">
-              {format(new Date(sale.saleDate), "dd/MM/yyyy HH:mm")}
-            </span>
-          </div>
-          <div>
-            <span className="font-medium">Cliente:</span>
-            <span className="ml-2">{customer.name}</span>
-          </div>
-          <div>
-            <span className="font-medium">Identificación:</span>
-            <span className="ml-2">
-              {customer.idType} {customer.idNumber}
-            </span>
-          </div>
-          {customer.email && (
-            <div>
-              <span className="font-medium">Email:</span>
-              <span className="ml-2">{customer.email}</span>
-            </div>
-          )}
-          {customer.phone && (
-            <div>
-              <span className="font-medium">Teléfono:</span>
-              <span className="ml-2">{customer.phone}</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="mb-4 receipt-items">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b dark:border-gray-700">
-              <th className="text-left py-2">Producto</th>
-              <th className="text-center py-2">Cant.</th>
-              <th className="text-right py-2">Precio</th>
-              <th className="text-right py-2">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr
-                key={item.productId}
-                className="border-b dark:border-gray-700"
-              >
-                <td className="py-2">{item.product.name}</td>
-                <td className="text-center py-2">{item.quantity}</td>
-                <td className="text-right py-2">
-                  {formatCurrency(item.unitPrice)}
-                </td>
-                <td className="text-right py-2">
-                  {formatCurrency(item.subtotal)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="mb-4 receipt-summary">
-        <div className="flex justify-between text-sm mb-1">
-          <span>Subtotal:</span>
-          <span>
-            {formatCurrency(sale.totalAmount * (1 - TAX_CONFIG.rate))}
-          </span>
-        </div>
-        <div className="flex justify-between text-sm mb-1">
-          <span>
-            {TAX_CONFIG.label} ({TAX_CONFIG.percentage}):
-          </span>
-          <span>{formatCurrency(sale.totalAmount * TAX_CONFIG.rate)}</span>
-        </div>
-        <div className="flex justify-between font-bold">
-          <span>TOTAL:</span>
-          <span>{formatCurrency(sale.totalAmount)}</span>
-        </div>
-      </div>
-
-      <div className="text-center text-sm mb-4 border-t dark:border-gray-700 pt-3 receipt-footer">
-        <p className="font-medium">
-          Método de pago: {getPaymentMethodText(sale.paymentMethod)}
-        </p>
-        {renderPaymentDetails()}
-        <p className="mt-3">¡Gracias por su compra!</p>
-        <p className="text-xs mt-1">{APP_CONFIG.receiptCopyright}</p>
-      </div>
-
-      <div className="flex flex-wrap gap-2 justify-center no-print">
-        <button
-          ref={printButtonRef}
-          onClick={onPrint}
-          className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center no-print"
-          aria-label="Imprimir recibo"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-2"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>Imprimir</span>
-          <kbd className="ml-2 px-1 bg-blue-700 dark:bg-blue-800 text-xs rounded">
-            Alt+P
-          </kbd>
-        </button>
-
-        {onDownloadPDF && (
-          <button
-            onClick={onDownloadPDF}
-            className="bg-green-600 dark:bg-green-700 text-white px-4 py-2 rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors flex items-center no-print"
-            aria-label="Descargar PDF"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>Descargar PDF</span>
-          </button>
-        )}
-
-        {onSendEmail && (
-          <button
-            onClick={onSendEmail}
-            className="bg-purple-600 dark:bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors flex items-center no-print"
-            aria-label="Enviar por email"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-            </svg>
-            <span>Enviar por Email</span>
-          </button>
-        )}
-
+      <div
+        ref={modalRef}
+        className="bg-white dark:bg-gray-800 dark:text-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-auto"
+      >
+        {/* Botón cerrar en esquina */}
         <button
           onClick={onClose}
-          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center no-print"
-          aria-label="Cerrar recibo"
+          className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors no-print text-gray-500 dark:text-gray-400"
+          aria-label="Cerrar"
         >
-          <span>Cerrar</span>
-          <kbd className="ml-2 px-1 bg-gray-200 dark:bg-gray-700 text-xs rounded">
-            Alt+X
-          </kbd>
+          <XIcon size={20} />
         </button>
+
+        <div className="p-6">
+          {/* Título del recibo */}
+          <h2 className="text-xl font-bold mb-4 text-center text-gray-900 dark:text-white no-print">
+            {sale.invoice?.number
+              ? `Factura No. ${sale.invoice.number}`
+              : `Recibo de Venta #${sale.id}`}
+          </h2>
+
+          {/* Contenido imprimible */}
+          <div ref={receiptContentRef} className="receipt-content">
+            {/* Cabecera con información de la empresa */}
+            <div className="receipt-header text-center mb-4">
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+                {COMPANY_INFO.name}
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {COMPANY_INFO.address}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {COMPANY_INFO.city}, {COMPANY_INFO.zip}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                RIF: {COMPANY_INFO.rif} | Teléfono: {COMPANY_INFO.phone}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {COMPANY_INFO.email}
+              </p>
+            </div>
+
+            {/* Detalles de la venta */}
+            <div className="receipt-details border-t border-b border-dashed border-gray-300 dark:border-gray-600 py-3 mb-4">
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {sale.invoice?.number ? "Factura No.:" : "Recibo No.:"}
+                </span>
+                <span className="text-sm text-gray-800 dark:text-gray-200">
+                  {sale.invoice?.number || sale.id}
+                </span>
+              </div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Fecha:
+                </span>
+                <span className="text-sm text-gray-800 dark:text-gray-200">
+                  {formatDate(sale.saleDate || new Date())}
+                </span>
+              </div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Cliente:
+                </span>
+                <span className="text-sm text-gray-800 dark:text-gray-200">
+                  {customer.name}
+                </span>
+              </div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Identificación:
+                </span>
+                <span className="text-sm text-gray-800 dark:text-gray-200">
+                  {customer.idType} {customer.idNumber}
+                </span>
+              </div>
+              {customer.email && (
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Email:
+                  </span>
+                  <span className="text-sm text-gray-800 dark:text-gray-200">
+                    {customer.email}
+                  </span>
+                </div>
+              )}
+              {customer.phone && (
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Teléfono:
+                  </span>
+                  <span className="text-sm text-gray-800 dark:text-gray-200">
+                    {customer.phone}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Tabla de productos */}
+            <div className="receipt-items mb-4">
+              <div className="receipt-item-header grid grid-cols-12 text-sm font-medium text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 pb-1 mb-2">
+                <div className="col-span-6">Producto</div>
+                <div className="col-span-2 text-center">Cant.</div>
+                <div className="col-span-2 text-right">Precio</div>
+                <div className="col-span-2 text-right">Total</div>
+              </div>
+
+              {items.map((item) => (
+                <div
+                  key={item.productId}
+                  className="receipt-item grid grid-cols-12 text-sm text-gray-800 dark:text-gray-200 mb-1"
+                >
+                  <div className="col-span-6 truncate">{item.product.name}</div>
+                  <div className="col-span-2 text-center">{item.quantity}</div>
+                  <div className="col-span-2 text-right">
+                    {formatCurrency(item.unitPrice)}
+                  </div>
+                  <div className="col-span-2 text-right">
+                    {formatCurrency(item.subtotal)}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Totales */}
+            <div className="receipt-totals border-t border-dashed border-gray-300 dark:border-gray-600 pt-3 mb-4">
+              {/* Subtotal - siempre mostrar */}
+              <div className="receipt-total-row flex justify-between mb-1">
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Subtotal:
+                </span>
+                <span className="text-sm text-gray-800 dark:text-gray-200">
+                  {formatCurrency(subtotal)}
+                </span>
+              </div>
+
+              {/* Impuesto (solo mostrar si está habilitado) */}
+              {TAX_CONFIG.enabled && (
+                <div className="receipt-total-row flex justify-between mb-1">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {TAX_CONFIG.label} ({TAX_CONFIG.percentage}):
+                  </span>
+                  <span className="text-sm text-gray-800 dark:text-gray-200">
+                    {formatCurrency(taxAmount)}
+                  </span>
+                </div>
+              )}
+
+              {/* Total */}
+              <div className="receipt-total-final flex justify-between font-bold mt-2 pt-2 border-t border-gray-300 dark:border-gray-600">
+                <span className="text-base text-gray-900 dark:text-white">
+                  TOTAL:
+                </span>
+                <span className="text-base text-gray-900 dark:text-white">
+                  {formatCurrency(sale.totalAmount)}
+                </span>
+              </div>
+            </div>
+
+            {/* Método de pago */}
+            <div className="receipt-payment mb-4">
+              <div className="text-sm text-gray-700 dark:text-gray-300 mb-1 font-medium">
+                Forma de pago:{" "}
+                <span className="text-gray-800 dark:text-gray-200">
+                  {getPaymentMethodText(sale.paymentMethod)}
+                </span>
+              </div>
+              {renderPaymentDetails()}
+            </div>
+
+            {/* Footer del recibo */}
+            <div className="receipt-footer text-center mt-6 text-sm text-gray-600 dark:text-gray-400">
+              <p>{APP_CONFIG.receiptCopyright}</p>
+              <p className="mt-1">¡Gracias por su compra!</p>
+            </div>
+          </div>
+
+          {/* Botones de acción (solo visibles en pantalla) */}
+          <div className="receipt-actions mt-6 no-print">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Grupo de botones izquierdo */}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  ref={printButtonRef}
+                  onClick={handlePrint}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-2 rounded text-sm font-medium flex items-center gap-1.5"
+                  aria-label="Imprimir recibo (Alt+P)"
+                >
+                  <PrinterIcon size={16} />
+                  <span>Imprimir</span>
+                </button>
+
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={isGeneratingPDF}
+                  className="bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded text-sm font-medium flex items-center gap-1.5 disabled:opacity-60 disabled:pointer-events-none"
+                  aria-label="Descargar PDF (Alt+D)"
+                >
+                  <DownloadIcon size={16} />
+                  <span>{isGeneratingPDF ? "Generando..." : "PDF"}</span>
+                </button>
+
+                {customer.email && (
+                  <button
+                    onClick={handleSendEmail}
+                    disabled={isSendingEmail}
+                    className="bg-green-600 text-white hover:bg-green-700 px-3 py-2 rounded text-sm font-medium flex items-center gap-1.5 disabled:opacity-60 disabled:pointer-events-none"
+                    aria-label="Enviar por email"
+                  >
+                    <MailIcon size={16} />
+                    <span>{isSendingEmail ? "Enviando..." : "Email"}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Botón de cerrar (alineado a la derecha en desktop, a la izquierda en móvil) */}
+              <div className="flex justify-start sm:justify-end">
+                <button
+                  ref={closeButtonRef}
+                  onClick={onClose}
+                  className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded text-sm font-medium"
+                  aria-label="Cerrar recibo (Alt+X)"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

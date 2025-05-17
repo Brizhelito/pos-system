@@ -42,32 +42,41 @@ export const AUTH_CONFIG = {
 // =========================================
 export const COMPANY_CONFIG = {
   // Nombre comercial de la empresa
-  name: process.env.COMPANY_NAME || "E-Commerce",
+  name: process.env.COMPANY_NAME || "Mundo de la Pasta",
 
   // Dirección física
   address: process.env.COMPANY_ADDRESS || "Av. Principal 123",
 
   // Ciudad y estado
-  city: process.env.COMPANY_CITY || "Maracaibo, Zulia",
+  city: process.env.COMPANY_CITY || "Ciudad, Estado",
 
   // Código postal
-  zip: process.env.COMPANY_ZIP || "4001",
+  zip: process.env.COMPANY_ZIP || "12345",
 
   // Teléfono de contacto
   phone: process.env.COMPANY_PHONE || "+58 123-456-7890",
 
   // Correo electrónico de contacto
-  email: process.env.COMPANY_EMAIL || "ecommerce@gmail.com",
+  email: process.env.COMPANY_EMAIL || "contacto@mundo.com",
 
   // RIF o número de identificación fiscal
   rif: process.env.COMPANY_RIF || "J-12345678-9",
 
   // Sitio web de la empresa
-  website: process.env.COMPANY_WEBSITE || "www.ecommerce.com",
+  website: process.env.COMPANY_WEBSITE || "www.mundo.com",
 
   // URL del logotipo de la empresa
   logoUrl: process.env.COMPANY_LOGO_URL || "/logo.png",
 };
+
+/**
+ * Función auxiliar para convertir string a booleano de forma segura
+ * Convierte "true", "1", "yes" a true, todo lo demás a false
+ */
+function parseBoolean(value: string | undefined): boolean {
+  if (!value) return false;
+  return ["true", "1", "yes"].includes(value.toLowerCase());
+}
 
 // =========================================
 // Configuración de Impuestos
@@ -85,7 +94,25 @@ export const TAX_CONFIG = {
     : "16%",
 
   // Habilitar o deshabilitar cálculo de impuestos
-  enabled: process.env.TAX_ENABLED ? process.env.TAX_ENABLED === "true" : false,
+  enabled: parseBoolean(process.env.TAX_ENABLED),
+
+  /**
+   * Calcula el impuesto para un monto dado
+   * Si los impuestos están deshabilitados, devuelve 0
+   */
+  calculate: function (amount: number): number {
+    if (!this.enabled) return 0;
+    return amount * this.rate;
+  },
+
+  /**
+   * Calcula el monto total incluyendo impuestos
+   * Si los impuestos están deshabilitados, devuelve el monto original
+   */
+  calculateTotal: function (amount: number): number {
+    if (!this.enabled) return amount;
+    return amount + this.calculate(amount);
+  },
 };
 
 // =========================================
@@ -99,7 +126,17 @@ export const CURRENCY_CONFIG = {
   symbol: process.env.CURRENCY_SYMBOL || "$",
 
   // Configuración regional para formateo
-  locale: process.env.CURRENCY_LOCALE || "en-US",
+  locale: process.env.CURRENCY_LOCALE || "es-VE",
+
+  /**
+   * Formatea un valor numérico a formato de moneda
+   */
+  format: function (value: number): string {
+    return new Intl.NumberFormat(this.locale, {
+      style: "currency",
+      currency: this.code,
+    }).format(value);
+  },
 };
 
 // =========================================
@@ -115,7 +152,7 @@ export const INVOICE_CONFIG = {
 // =========================================
 export const APP_CONFIG = {
   // Nombre de la aplicación
-  name: process.env.APP_NAME || "POS System",
+  name: process.env.APP_NAME || "Sistema POS",
 
   // Método de pago predeterminado
   defaultPaymentMethod: process.env.DEFAULT_PAYMENT_METHOD || "EFECTIVO",

@@ -145,9 +145,10 @@ const SaleContainer = () => {
       (sum: number, item: CartItem) => sum + item.subtotal,
       0
     );
-    const taxRate = TAX_CONFIG.rate; // Usar la tasa desde la configuración
-    const tax = subtotal * taxRate;
-    const total = subtotal + tax;
+
+    // Usar las funciones mejoradas de TAX_CONFIG
+    const tax = TAX_CONFIG.calculate(subtotal);
+    const total = TAX_CONFIG.calculateTotal(subtotal);
 
     setSaleState((prev) => ({
       ...prev,
