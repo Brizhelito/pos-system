@@ -113,14 +113,6 @@ model user {
   sale      sale[]
 }
 
-model config {
-  id        Int      @id @default(autoincrement())
-  key       String   @unique
-  value     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 enum user_role {
   SELLER
   ADMIN
