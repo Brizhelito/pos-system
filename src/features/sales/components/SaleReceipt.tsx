@@ -12,7 +12,7 @@ import {
   APP_CONFIG,
 } from "@/utils/constants";
 import "@/lib/print-styles.css";
-import { PrinterIcon, DownloadIcon, MailIcon, XIcon } from "lucide-react";
+import { PrinterIcon, DownloadIcon, XIcon } from "lucide-react";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { autoTable } from "jspdf-autotable";
@@ -23,13 +23,21 @@ interface SaleReceiptProps {
   customer: Customer;
   items: CartItem[];
   onClose: () => void;
+  onPrint?: () => void;
+  onDownloadPDF?: () => Promise<void>;
 }
 
-const SaleReceipt = ({ sale, customer, items, onClose }: SaleReceiptProps) => {
+const SaleReceipt = ({
+  sale,
+  customer,
+  items,
+  onClose,
+  onPrint,
+  onDownloadPDF: externalDownloadPDF,
+}: SaleReceiptProps) => {
   // Estado para controlar si hay error en los datos
   const [hasError] = useState(!sale || !customer || !Array.isArray(items));
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   // Referencias para enfoque de elementos
   const printButtonRef = useRef<HTMLButtonElement>(null);
@@ -47,7 +55,11 @@ const SaleReceipt = ({ sale, customer, items, onClose }: SaleReceiptProps) => {
     "alt+p",
     () => {
       if (!hasError) {
-        handlePrint();
+        if (onPrint) {
+          onPrint();
+        } else {
+          handlePrint();
+        }
       }
     },
     {
@@ -72,7 +84,11 @@ const SaleReceipt = ({ sale, customer, items, onClose }: SaleReceiptProps) => {
     "alt+d",
     () => {
       if (!hasError && !isGeneratingPDF) {
-        handleDownloadPDF();
+        if (externalDownloadPDF) {
+          externalDownloadPDF();
+        } else {
+          handleDownloadPDF();
+        }
       }
     },
     {
@@ -602,30 +618,6 @@ const SaleReceipt = ({ sale, customer, items, onClose }: SaleReceiptProps) => {
     }
   };
 
-  // Función para enviar el recibo por email
-  const handleSendEmail = async () => {
-    if (!customer.email) {
-      toast.error("El cliente no tiene un correo electrónico registrado");
-      return;
-    }
-
-    try {
-      setIsSendingEmail(true);
-      toast.info(`Enviando recibo a ${customer.email}...`);
-
-      // Aquí iría el código para enviar por email (utilizando una API)
-      // Simulamos una espera
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      toast.success(`Recibo enviado a ${customer.email}`);
-    } catch (error) {
-      console.error("Error al enviar email:", error);
-      toast.error("Error al enviar el email");
-    } finally {
-      setIsSendingEmail(false);
-    }
-  };
-
   // Calcular subtotal y monto de impuestos para el modal
   const { subtotal, taxAmount } = calculateAmounts();
 
@@ -841,7 +833,7 @@ const SaleReceipt = ({ sale, customer, items, onClose }: SaleReceiptProps) => {
               <div className="flex flex-wrap gap-2">
                 <button
                   ref={printButtonRef}
-                  onClick={handlePrint}
+                  onClick={onPrint || handlePrint}
                   className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-2 rounded text-sm font-medium flex items-center gap-1.5"
                   aria-label="Imprimir recibo (Alt+P)"
                 >
@@ -850,7 +842,7 @@ const SaleReceipt = ({ sale, customer, items, onClose }: SaleReceiptProps) => {
                 </button>
 
                 <button
-                  onClick={handleDownloadPDF}
+                  onClick={externalDownloadPDF || handleDownloadPDF}
                   disabled={isGeneratingPDF}
                   className="bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded text-sm font-medium flex items-center gap-1.5 disabled:opacity-60 disabled:pointer-events-none"
                   aria-label="Descargar PDF (Alt+D)"
@@ -858,18 +850,6 @@ const SaleReceipt = ({ sale, customer, items, onClose }: SaleReceiptProps) => {
                   <DownloadIcon size={16} />
                   <span>{isGeneratingPDF ? "Generando..." : "PDF"}</span>
                 </button>
-
-                {customer.email && (
-                  <button
-                    onClick={handleSendEmail}
-                    disabled={isSendingEmail}
-                    className="bg-green-600 text-white hover:bg-green-700 px-3 py-2 rounded text-sm font-medium flex items-center gap-1.5 disabled:opacity-60 disabled:pointer-events-none"
-                    aria-label="Enviar por email"
-                  >
-                    <MailIcon size={16} />
-                    <span>{isSendingEmail ? "Enviando..." : "Email"}</span>
-                  </button>
-                )}
               </div>
 
               {/* Botón de cerrar (alineado a la derecha en desktop, a la izquierda en móvil) */}

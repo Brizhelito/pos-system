@@ -945,45 +945,6 @@ const SaleContainer = () => {
     }
   };
 
-  const handleSendEmail = async () => {
-    if (!completedSale || !completedSale.customer?.email) {
-      toast.error("No hay un email de cliente disponible");
-      return;
-    }
-
-    try {
-      toast.info(`Enviando factura a ${completedSale.customer.email}...`);
-
-      // Generar el PDF para enviar por correo
-      const items =
-        completedSale.saleitem
-          ?.filter((item) => item.product)
-          .map((item) => ({
-            productId: item.productId,
-            product: item.product!,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            subtotal: item.subtotal,
-          })) || [];
-
-      if (items.length === 0) {
-        toast.error("No hay productos en la venta para enviar");
-        return;
-      }
-
-      // En un caso real, aquí generaríamos el PDF y lo enviaríamos por API
-      // Por ahora, simulamos una respuesta exitosa después de una breve demora
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      toast.success(
-        `Factura enviada por email a ${completedSale.customer.email}`
-      );
-    } catch (error) {
-      console.error("Error al enviar email:", error);
-      toast.error("Error al enviar el email");
-    }
-  };
-
   return (
     <>
       <div className="sale-container grid grid-cols-1 lg:grid-cols-12 h-screen max-h-screen overflow-hidden bg-background">
@@ -1270,7 +1231,6 @@ const SaleContainer = () => {
               onClose={handleCloseReceipt}
               onPrint={handlePrintReceipt}
               onDownloadPDF={handleDownloadPDF}
-              onSendEmail={handleSendEmail}
             />
           </div>
         </div>
