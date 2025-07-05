@@ -18,7 +18,7 @@ export default function AdminLayout({
       />
 
       <main
-        className={` flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 overflow-y-auto transition-all duration-300 `}
+        className={` flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 overflow-hidden transition-all duration-300  `}
       >
         {children}
       </main>
