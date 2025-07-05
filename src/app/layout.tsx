@@ -69,7 +69,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SalesProvider>
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-4 right-4 overflow-hidden">
               <ThemeToggle />
             </div>
             {children}
