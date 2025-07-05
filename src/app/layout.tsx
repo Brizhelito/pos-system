@@ -60,7 +60,7 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <head />
       <body
-        className={`${geistSans.variable} ${geistMono.variable}  max-h-screen overflow-scroll`}
+        className={`${geistSans.variable} ${geistMono.variable}  max-h-screen overflow-hidden`}
       >
         <ThemeProvider
           attribute="class"
@@ -69,7 +69,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SalesProvider>
-            <div className="absolute top-4 right-4 overflow-hidden">
+            <div className="absolute top-4 right-4">
               <ThemeToggle />
             </div>
             {children}
