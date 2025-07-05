@@ -22,7 +22,6 @@ import { LoginRequest, LoginRequestSchema } from "@/types/User";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
