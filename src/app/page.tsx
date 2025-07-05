@@ -175,12 +175,6 @@ export default function LoginPage() {
                         <FormLabel className="dark:text-gray-300">
                           Contraseña
                         </FormLabel>
-                        <a
-                          href="#forgot-password"
-                          className="text-sm text-primary hover:underline dark:text-primary-dark"
-                        >
-                          ¿Olvidaste tu contraseña?
-                        </a>
                       </div>
                       <FormControl>
                         <motion.div whileHover={{ scale: 1.01 }}>
@@ -238,18 +232,6 @@ export default function LoginPage() {
               </form>
             </Form>
           </CardContent>
-
-          <CardFooter className="flex justify-center">
-            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-              ¿No tienes cuenta?{" "}
-              <a
-                href="#signup"
-                className="text-primary hover:underline font-medium dark:text-primary-dark"
-              >
-                Regístrate aquí
-              </a>
-            </p>
-          </CardFooter>
         </Card>
       </motion.div>
     </div>
